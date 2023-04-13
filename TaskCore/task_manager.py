@@ -1,4 +1,5 @@
-from data import dataManager
+from data import dataManager, TaskInfo
+from utils.scheduler import scheduler
 
 
 class TaskManager:

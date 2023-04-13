@@ -1,10 +1,16 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
-task_api = APIRouter(prefix="/task")
+from utils.api_base_func import token_requie
+
+from .form_model import TaskAddForm
+from .task_session_api import session_api
+
+task_api = APIRouter(prefix="/task", dependencies=[Depends(token_requie)])
+task_api.include_router(session_api)
 
 
 @task_api.post("/new")
-async def new_task():
+async def new_task(form: TaskAddForm):
     pass
 
 

@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from auth.auth_api import auth_api
 
+
 app = FastAPI(title="TaskStack", description="A simple task manager run on server")
 
 app.add_middleware(

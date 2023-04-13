@@ -1,6 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from utils.api_base_func import token_requie
 
-session_api = APIRouter(prefix="/session")
+session_api = APIRouter(prefix="/session", dependencies=[Depends(token_requie)])
 
 
 @session_api.post("/find")
