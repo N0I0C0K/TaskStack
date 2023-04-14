@@ -1,19 +1,32 @@
-import subprocess
-import shlex
 import asyncio
-from utils import logger, auto_decode
-from utils.thread_pool import main_loop
+import shlex
+import subprocess
+import time
 from typing import Callable
+
+from utils import auto_decode, logger
+from utils.thread_pool import main_loop
+from secrets import token_hex
 
 
 class TaskExecutor:
-    def __init__(self, command: str, finish_callback: Callable = None) -> None:
+    def __init__(
+        self, command: str, finish_callback: Callable = None, task_id: str = ""
+    ) -> None:
         """
         任务执行单元
         :param session_info:`Session`类, 提供session的信息
         """
         assert len(command) > 0
+        self.raw_command = command
         self.command = shlex.split(command)
+
+        self.start_time = time.time()
+        self.finish_time = -1
+
+        self.id = token_hex(16)
+        self.task_id = task_id
+
         self.task = None
         self.__stdout = None
         self.__stderr = None
@@ -28,18 +41,19 @@ class TaskExecutor:
         except ValueError as valerr:
             logger.error(valerr)
         else:
-            if self.finish_callback is not None:
-                self.finish_check_task = main_loop.create_task(self.__finish_check())
+            self.finish_check_task = main_loop.create_task(self.__finish_check())
         logger.info("Start execute  => %s", self.command)
 
     async def __finish_check(self):
         while not self.finished():
             await asyncio.sleep(1)
+        self.finish_time = time.time()
+
         if self.finish_callback:
             self.finish_callback()
 
     def finished(self) -> bool:
-        return self.task and self.task.poll() is not None
+        return self.task is None or self.task.poll() is not None
 
     def kill(self):
         if self.task:
@@ -73,3 +87,6 @@ class TaskExecutor:
             return ""
         self.__stderr = auto_decode(self.task.stderr.read())
         return self.__stderr
+
+    def __repr__(self) -> str:
+        return f"{self.command}"

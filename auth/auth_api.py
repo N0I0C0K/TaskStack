@@ -5,7 +5,7 @@ from .auth_manager import auth_manager
 from utils import HttpState, make_response
 import time
 
-auth_api = APIRouter(prefix="auth")
+auth_api = APIRouter(prefix="/auth")
 
 
 class LoginForm(BaseModel):

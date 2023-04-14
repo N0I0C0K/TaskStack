@@ -12,6 +12,9 @@ class TokenSession:
     token: str
     active_time: float = field(default_factory=time.time)
 
+    def __hash__(self) -> int:
+        return hash(self.token)
+
 
 class AuthManager:
     def __init__(self) -> None:

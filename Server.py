@@ -5,7 +5,7 @@ from uvicorn import Config, Server
 from fastapi.middleware.cors import CORSMiddleware
 
 from auth.auth_api import auth_api
-
+from task_core.task_api import task_api
 
 app = FastAPI(title="TaskStack", description="A simple task manager run on server")
 
@@ -18,6 +18,7 @@ app.add_middleware(
 )
 
 app.include_router(auth_api)
+app.include_router(task_api)
 
 
 def main():
