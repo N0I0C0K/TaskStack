@@ -8,24 +8,32 @@ def test_utils():
     print(db_path.as_posix())
 
 
-from task_core.task_unit import TaskUnit
+from task_core.task_unit import TaskUnit, asdict
 import time
 
 
 async def test_task():
     a = TaskUnit(
-        id="1",
         name="1",
-        active=True,
-        create_time=1.1,
         command="ipconfig",
     )
-    a.run_task()
+    print(asdict(a.__dict__))
+    a.run()
     time.sleep(2)
     print(a.task_exectuor.stdout)
 
 
-main_loop.run_until_complete(test_task())
+async def add_task():
+    from task_core.task_manager import task_manager
+    from task_core.form_model import TaskAddForm
+
+    task = task_manager.add_task(TaskAddForm(name="test", command="ipconfig"))
+    task.run()
+    task.task_exectuor.wait()
+    print(task.task_exectuor.stdout)
+
+
+main_loop.run_until_complete(add_task())
 
 
 def test_database():
@@ -52,3 +60,23 @@ def test_database_add():
 
 
 # test_database_add()
+
+from pydantic import BaseModel
+import functools
+
+
+def test_other():
+    class Test(BaseModel):
+        a: str
+        b: str
+
+        @functools.wraps(BaseModel.__init__)
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            print("1")
+
+    a = Test(a="1", b="1")
+    a = Test()
+
+
+# test_other()

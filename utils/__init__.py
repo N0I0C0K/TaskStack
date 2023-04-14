@@ -2,6 +2,7 @@ from .logger import logger
 from .api_utils import HttpState, make_response
 
 from chardet import detect
+from secrets import token_hex
 
 
 def auto_decode(s: bytes) -> str:
@@ -12,3 +13,7 @@ def auto_decode(s: bytes) -> str:
         return ""
     encoding = detect(s)
     return s.decode(encoding["encoding"])
+
+
+def uuid():
+    return token_hex(16)

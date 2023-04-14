@@ -1,17 +1,22 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from utils.scheduler import scheduler, Job, CronTrigger
 from .task_executor import TaskExecutor
-from utils import logger
+from utils import logger, uuid
+
+import time
+
+# from functools import wraps
 
 
 @dataclass
 class TaskUnit:
-    id: str
     name: str
-    active: bool
-    create_time: float
     command: str
-    crontab_exp: str | None = None
+    active: bool = True
+    crontab_exp: str = ""
+    id: str = field(default_factory=uuid)
+    create_time: float = field(default_factory=time.time)
+
     scheduler_job: Job = field(init=False, default=None)
     task_exectuor: TaskExecutor = field(init=False, default=None)
 
@@ -28,7 +33,7 @@ class TaskUnit:
         logger.info("%s-%s finish execute", self.name, self.id)
         task_manager.unmount_save_session(self.task_exectuor.id)
 
-    def run_task(self):
+    def run(self):
         if not self.can_exec():
             return
         from .task_manager import task_manager
@@ -40,10 +45,22 @@ class TaskUnit:
         if self.can_exec():
             return
         logger.info("%s-%s start execute", self.name, self.id)
-        self.run_task()
+        self.run()
 
     def __post_init__(self):
-        if self.crontab_exp is not None:
+        if self.crontab_exp is not None and len(self.crontab_exp) > 0:
             self.scheduler_job = scheduler.add_job(
-                self.__task_exec_func, CronTrigger.from_crontab(self.crontab_exp)
+                self.__task_exec_func,
+                CronTrigger.from_crontab(self.crontab_exp),
             )
+
+    def to_dict(self) -> dict:
+        # return {
+        #     "id": self.id,
+        #     "name": self.name,
+        #     "active": self.active,
+        #     "create_time": self.create_time,
+        #     "command": self.command,
+        #     "crontab_exp": self.crontab_exp,
+        # }
+        return self.__dict__
