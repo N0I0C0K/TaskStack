@@ -9,31 +9,27 @@ def test_utils():
 
 
 from task_core.task_unit import TaskUnit, asdict
-import time
 
 
-async def test_task():
+def test_task():
     a = TaskUnit(
         name="1",
         command="ipconfig",
     )
-    print(asdict(a.__dict__))
     a.run()
-    time.sleep(2)
-    print(a.task_exectuor.stdout)
+    assert a.task_exectuor is not None
+    a.task_exectuor.wait()
+    assert a.task_exectuor.stdout != ""
 
 
-async def add_task():
+def test_add_task():
     from task_core.task_manager import task_manager
     from task_core.form_model import TaskAddForm
 
     task = task_manager.add_task(TaskAddForm(name="test", command="ipconfig"))
     task.run()
     task.task_exectuor.wait()
-    print(task.task_exectuor.stdout)
-
-
-main_loop.run_until_complete(add_task())
+    assert task.task_exectuor.stdout != ""
 
 
 def test_database():
@@ -41,7 +37,7 @@ def test_database():
 
     with dataManager.session as sess:
         for r in sess.query(SessionInfo).all():
-            print(r)
+            assert r.id != ""
 
 
 def test_database_add():
@@ -57,26 +53,3 @@ def test_database_add():
         )
         sess.add(a)
         sess.commit()
-
-
-# test_database_add()
-
-from pydantic import BaseModel
-import functools
-
-
-def test_other():
-    class Test(BaseModel):
-        a: str
-        b: str
-
-        @functools.wraps(BaseModel.__init__)
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            print("1")
-
-    a = Test(a="1", b="1")
-    a = Test()
-
-
-# test_other()

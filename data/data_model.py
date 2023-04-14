@@ -24,15 +24,6 @@ class SessionInfo(Base):
     task_id = Column(Text, nullable=False)
     command = Column(Text, nullable=False)
 
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "invoke_time": self.invoke_time,
-            "finish_time": self.finish_time,
-            "task_id": self.task_id,
-            "command": self.command,
-        }
-
 
 class TaskInfo(Base):
     __tablename__ = "TaskInfo"

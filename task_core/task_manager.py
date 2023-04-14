@@ -1,6 +1,7 @@
 from data import SessionInfo, TaskInfo, dataManager, as_dict
 from utils import logger
 
+from utils.event import Event
 
 from .task_executor import TaskExecutor
 from .task_unit import TaskUnit
@@ -11,6 +12,10 @@ class TaskManager:
     def __init__(self) -> None:
         self.task_dict: dict[str, TaskUnit] = dict()
         self.session_dict: dict[str, TaskExecutor] = dict()
+
+        self.task_start_event: Event[TaskExecutor] = Event[TaskExecutor]()
+        self.task_finish_event: Event[TaskExecutor] = Event[TaskExecutor]()
+
         self.load_task()
 
     def load_task(self):
@@ -30,16 +35,22 @@ class TaskManager:
             )
             sess.add(data_sess)
             sess.commit()
+
+        self.task_finish_event.invoke(task_sess)
+
         logger.debug("%s session unmount and save=> %s", task_sess.id, task_sess)
 
     def mount_session(self, session: TaskExecutor):
         logger.debug("%s session mount => %s", session.id, session)
         self.session_dict[session.id] = session
 
+        self.task_start_event.invoke(session)
+
     def add_task(self, add_task: TaskAddForm) -> TaskUnit:
         new_task = TaskUnit(
             name=add_task.name,
             command=add_task.command,
+            crontab_exp=add_task.crontab_exp,
         )
         self.task_dict[new_task.id] = new_task
         # TODO 检测name是否有重复值
@@ -47,6 +58,10 @@ class TaskManager:
             task_model = TaskInfo(**new_task.to_dict())
             sess.add(task_model)
             sess.commit()
+
+        if add_task.invoke_once:
+            new_task.run()
+
         return new_task
 
     def get_task_by_id(self, task_id: str) -> TaskUnit | None:

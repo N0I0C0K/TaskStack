@@ -24,7 +24,11 @@ async def task_require(task_id: str) -> TaskUnit:
 
 @task_api.post("/create")
 async def new_task(form: TaskAddForm):
-    pass
+    task = manager.add_task(form)
+    return make_response(
+        HttpState.SUCCESS,
+        task=task.to_dict(),
+    )
 
 
 @task_api.get("/list")
