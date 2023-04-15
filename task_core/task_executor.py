@@ -42,7 +42,7 @@ class TaskExecutor:
             logger.error(valerr)
         else:
             self.finish_check_task = main_loop.create_task(self.__finish_check())
-        logger.info("Start execute  => %s", self.command)
+        logger.info("Start execute => %s", self.command)
 
     async def __finish_check(self):
         while not self.finished():

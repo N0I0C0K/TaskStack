@@ -16,7 +16,7 @@ task_api.include_router(session_api)
 
 
 async def task_require(task_id: str) -> TaskUnit:
-    t = manager.get_task_by_id(task_id)
+    t = manager.get_task(task_id)
     if t is None:
         raise HTTPException(501, "task_id is invaild")
     return t
@@ -46,7 +46,8 @@ async def get_all_task():
 
 @task_api.delete("/del")
 async def del_task(task: TaskUnit = Depends(task_require)):
-    pass
+    manager.del_task(task.id)
+    return make_response(HttpState.SUCCESS)
 
 
 @task_api.get("/query")

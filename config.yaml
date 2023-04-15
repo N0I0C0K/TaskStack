@@ -1,2 +1,2 @@
 auth:
-  secret: '%d%d%d'
+  secret: '321%d'

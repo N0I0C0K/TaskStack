@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 from utils.scheduler import scheduler, Job, CronTrigger
 from .task_executor import TaskExecutor
 from utils import logger, uuid
@@ -19,6 +19,7 @@ class TaskUnit:
 
     scheduler_job: Job = field(init=False, default=None)
     task_exectuor: TaskExecutor = field(init=False, default=None)
+    last_exec_time: float = field(init=False, default=0.0)
 
     def can_exec(self) -> bool:
         return not (
@@ -39,6 +40,7 @@ class TaskUnit:
         from .task_manager import task_manager
 
         self.task_exectuor = TaskExecutor(self.command, self.__on_task_finish)
+        self.last_exec_time = time.time()
         task_manager.mount_session(self.task_exectuor)
 
     def __task_exec_func(self):

@@ -7,6 +7,8 @@ from .task_executor import TaskExecutor
 from .task_unit import TaskUnit
 from .form_model import TaskAddForm
 
+from sqlalchemy import func
+
 
 class TaskManager:
     def __init__(self) -> None:
@@ -21,7 +23,17 @@ class TaskManager:
     def load_task(self):
         with dataManager.session as sess:
             for task in sess.query(TaskInfo).all():
-                self.task_dict[task.id] = TaskUnit(**as_dict(task))
+                t_task = TaskUnit(**as_dict(task))
+                self.task_dict[task.id] = t_task
+                last_exec_time = (
+                    sess.query(
+                        func.min(SessionInfo.invoke_time)  # pylint: disable=E1102
+                    )
+                    .filter(SessionInfo.id == task.id)
+                    .scalar()
+                )
+                if last_exec_time is not None:
+                    t_task.last_exec_time = last_exec_time
 
     def unmount_save_session(self, sessionid: str):
         task_sess = self.session_dict.pop(sessionid)
@@ -46,6 +58,16 @@ class TaskManager:
 
         self.task_start_event.invoke(session)
 
+    def del_task(self, task_id: str):
+        self.task_dict.pop(task_id)
+        with dataManager.session as sess:
+            task = sess.query(TaskInfo).filter(TaskInfo.id == task_id).one()
+            sess.delete(task)
+            sess.commit()
+
+    def get_task(self, task_id: str) -> TaskUnit | None:
+        return self.task_dict.get(task_id, None)
+
     def add_task(self, add_task: TaskAddForm) -> TaskUnit:
         new_task = TaskUnit(
             name=add_task.name,
@@ -63,9 +85,6 @@ class TaskManager:
             new_task.run()
 
         return new_task
-
-    def get_task_by_id(self, task_id: str) -> TaskUnit | None:
-        return self.task_dict.get(task_id, None)
 
 
 task_manager = TaskManager()

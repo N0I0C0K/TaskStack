@@ -1,14 +1,6 @@
-from utils.config import config
-from utils.file import db_path
+import pytest
 
-from utils.thread_pool import main_loop
-
-
-def test_utils():
-    print(db_path.as_posix())
-
-
-from task_core.task_unit import TaskUnit, asdict
+from task_core.task_unit import TaskUnit
 
 
 def test_task():
@@ -22,34 +14,29 @@ def test_task():
     assert a.task_exectuor.stdout != ""
 
 
-def test_add_task():
-    from task_core.task_manager import task_manager
+def test_add_del_task():
     from task_core.form_model import TaskAddForm
+    from task_core.task_manager import task_manager
+    from utils.thread_pool import main_loop
 
-    task = task_manager.add_task(TaskAddForm(name="test", command="ipconfig"))
-    task.run()
-    task.task_exectuor.wait()
-    assert task.task_exectuor.stdout != ""
+    async def test():
+        task = task_manager.add_task(TaskAddForm(name="test", command="whoami"))
+        assert main_loop.is_closed() is False
+        task.run()
+        assert task.last_exec_time != 0
+        task.task_exectuor.wait()
+        assert task.task_exectuor.stdout != ""
+
+        assert main_loop.is_closed() is False
+        task_manager.del_task(task.id)
+        assert task_manager.get_task(task.id) is None
+
+    main_loop.run_until_complete(test())
 
 
 def test_database():
-    from data import dataManager, SessionInfo
+    from data import SessionInfo, dataManager
 
     with dataManager.session as sess:
         for r in sess.query(SessionInfo).all():
             assert r.id != ""
-
-
-def test_database_add():
-    from data import dataManager, SessionInfo
-
-    with dataManager.session as sess:
-        a = SessionInfo(
-            id="1",
-            invoke_time=10,
-            finish_time=111,
-            task_id="111",
-            command="111",
-        )
-        sess.add(a)
-        sess.commit()
