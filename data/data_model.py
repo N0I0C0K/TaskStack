@@ -21,7 +21,7 @@ class SessionInfo(Base):
     id = Column(Text, primary_key=True)
     invoke_time = Column(Float, nullable=False)  # 触发时间 time.time()
     finish_time = Column(Float, nullable=False)
-    task_id = Column(Text, nullable=False)
+    task_id = Column(Text, nullable=False, index=True)
     command = Column(Text, nullable=False)
 
 
@@ -29,7 +29,7 @@ class TaskInfo(Base):
     __tablename__ = "TaskInfo"
 
     id = Column(Text, primary_key=True)
-    name = Column(Text, nullable=False)
+    name = Column(Text, nullable=False, index=True)
     active = Column(Boolean, nullable=False)
     create_time = Column(Float, nullable=False)
     command = Column(Text, nullable=False)

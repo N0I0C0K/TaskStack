@@ -53,4 +53,5 @@ async def get_session_detail(session_id: str):
         if sess_tar is None:
             return make_response(HttpState.CANT_FIND)
         out_file = output_store_path / f"{sess_tar.id}.out"
-        return make_response(**as_dict(sess_tar), output=out_file.read_text())
+        out_text = "out put missing" if not out_file.exists() else out_file.read_text()
+        return make_response(**as_dict(sess_tar), output=out_text)

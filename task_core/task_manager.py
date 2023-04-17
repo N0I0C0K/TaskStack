@@ -87,7 +87,7 @@ class TaskManager:
         self.task_dict[new_task.id] = new_task
         # TODO 检测name是否有重复值
         with dataManager.session as sess:
-            task_model = TaskInfo(**new_task.to_dict())
+            task_model = TaskInfo(**new_task.__dict__)
             sess.add(task_model)
             sess.commit()
 

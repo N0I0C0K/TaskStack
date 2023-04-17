@@ -1,5 +1,3 @@
-import pytest
-
 from task_core.task_unit import TaskUnit
 
 
@@ -9,6 +7,7 @@ def test_task():
         command="ipconfig",
     )
     a.run()
+    print(a.to_dict())
     assert a.task_exectuor is not None
     a.task_exectuor.wait()
     assert a.task_exectuor.stdout != ""

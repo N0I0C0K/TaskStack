@@ -25,7 +25,7 @@ class TaskUnit:
         return not (
             self.command is None
             or len(self.command) <= 1
-            or (self.task_exectuor is not None and not self.task_exectuor.finished())
+            or (self.task_exectuor is not None and not self.task_exectuor.finished)
         )
 
     def __on_task_finish(self):
@@ -56,6 +56,10 @@ class TaskUnit:
                 CronTrigger.from_crontab(self.crontab_exp),
             )
 
+    @property
+    def running(self) -> bool:
+        return self.task_exectuor is not None and not self.task_exectuor.finished
+
     def to_dict(self) -> dict:
         # return {
         #     "id": self.id,
@@ -65,4 +69,4 @@ class TaskUnit:
         #     "command": self.command,
         #     "crontab_exp": self.crontab_exp,
         # }
-        return self.__dict__
+        return self.__dict__ | {"running": self.running}

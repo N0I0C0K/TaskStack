@@ -45,13 +45,14 @@ class TaskExecutor:
         logger.info("Start execute => %s", self.command)
 
     async def __finish_check(self):
-        while not self.finished():
+        while not self.finished:
             await asyncio.sleep(1)
         self.finish_time = time.time()
 
         if self.finish_callback:
             self.finish_callback()
 
+    @property
     def finished(self) -> bool:
         return self.task is None or self.task.poll() is not None
 
@@ -70,7 +71,7 @@ class TaskExecutor:
             return self.__stdout
         if self.task is None:
             return ""
-        if not self.finished():
+        if not self.finished:
             logger.debug("attempt to access not finished process")
             return ""
         self.__stdout = auto_decode(self.task.stdout.read())
@@ -82,7 +83,7 @@ class TaskExecutor:
             return self.__stderr
         if self.task is None:
             return ""
-        if not self.finished():
+        if not self.finished:
             logger.debug("attempt to access not finished process")
             return ""
         self.__stderr = auto_decode(self.task.stderr.read())
