@@ -1,5 +1,6 @@
 from data import SessionInfo, TaskInfo, dataManager, as_dict
-from utils import logger
+from utils import logger, formate_time
+from utils.file import output_store_path
 
 from utils.event import Event
 
@@ -50,6 +51,15 @@ class TaskManager:
 
         self.task_finish_event.invoke(task_sess)
 
+        out_file = output_store_path / f"{task_sess.id}.out"
+        out_file.touch()
+
+        with out_file.open("w+", encoding="utf-8") as file:
+            # file.write(
+            #     f"Invoke at {formate_time(task_sess.start_time)}-{formate_time(task_sess.finish_time)}, from task [{task_sess.task_id}]\n\n"
+            # )
+            file.write(task_sess.stdout)
+        logger.debug("save the out put to %s", out_file.as_posix())
         logger.debug("%s session unmount and save=> %s", task_sess.id, task_sess)
 
     def mount_session(self, session: TaskExecutor):
