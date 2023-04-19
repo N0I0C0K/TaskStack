@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter
 from utils.thread_pool import main_loop
 from uvicorn import Config, Server
 
@@ -17,8 +17,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth_api)
-app.include_router(task_api)
+api_router = APIRouter(prefix="/api")
+api_router.include_router(auth_api)
+api_router.include_router(task_api)
+
+app.include_router(api_router)
 
 
 def main():

@@ -3,6 +3,10 @@ import secrets
 from utils.config import config
 from dataclasses import dataclass, field
 
+from utils.thread_pool import main_loop
+
+import asyncio
+
 Token = str
 
 
@@ -11,9 +15,17 @@ class TokenSession:
     secret_key: str
     token: str
     active_time: float = field(default_factory=time.time)
+    end_time: int = field(init=False, default=60 * 60 * 24)
 
     def __hash__(self) -> int:
         return hash(self.token)
+
+    def beat(self):
+        self.active_time = time.time()
+
+    @property
+    def available(self):
+        return time.time() - self.active_time < self.end_time
 
 
 class AuthManager:
@@ -29,8 +41,19 @@ class AuthManager:
             return token_session
         return None
 
+    def beat(self, token: str):
+        if token in self.token_dic:
+            self.token_dic[token].beat()
+
     def verify_token(self, token: str) -> bool:
-        return token in self.token_dic
+        if token not in self.token_dic:
+            return False
+        token_sess = self.token_dic[token]
+        if not token_sess.available:
+            self.token_dic.pop(token)
+            return False
+        token_sess.beat()
+        return True
 
 
 auth_manager = AuthManager()

@@ -4,9 +4,8 @@ import subprocess
 import time
 from typing import Callable
 
-from utils import auto_decode, logger
+from utils import auto_decode, logger, uuid
 from utils.thread_pool import main_loop
-from secrets import token_hex
 
 
 class TaskExecutor:
@@ -22,9 +21,9 @@ class TaskExecutor:
         self.command = shlex.split(command)
 
         self.start_time = time.time()
-        self.finish_time = -1
+        self.finish_time = 0
 
-        self.id = token_hex(16)
+        self.id = uuid()
         self.task_id = task_id
 
         self.task = None

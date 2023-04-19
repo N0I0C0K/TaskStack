@@ -39,14 +39,10 @@ class TaskManager:
     def unmount_save_session(self, sessionid: str):
         task_sess = self.session_dict.pop(sessionid)
         with dataManager.session as sess:
-            data_sess = SessionInfo(
-                id=task_sess.id,
-                invoke_time=task_sess.start_time,
-                finish_time=task_sess.finish_time,
-                task_id=task_sess.task_id,
-                command=task_sess.raw_command,
+            data_sess = (
+                sess.query(SessionInfo).filter(SessionInfo.id == task_sess.id).one()
             )
-            sess.add(data_sess)
+            data_sess.finish_time = task_sess.finish_time
             sess.commit()
 
         self.task_finish_event.invoke(task_sess)
@@ -65,6 +61,17 @@ class TaskManager:
     def mount_session(self, session: TaskExecutor):
         logger.debug("%s session mount => %s", session.id, session)
         self.session_dict[session.id] = session
+
+        with dataManager.session as sess:
+            data_sess = SessionInfo(
+                id=session.id,
+                invoke_time=session.start_time,
+                finish_time=session.finish_time,
+                task_id=session.task_id,
+                command=session.raw_command,
+            )
+            sess.add(data_sess)
+            sess.commit()
 
         self.task_start_event.invoke(session)
 
@@ -85,6 +92,7 @@ class TaskManager:
             crontab_exp=add_task.crontab_exp,
         )
         self.task_dict[new_task.id] = new_task
+
         # TODO 检测name是否有重复值
         with dataManager.session as sess:
             task_model = TaskInfo(**new_task.__dict__)

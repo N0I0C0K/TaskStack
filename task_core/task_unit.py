@@ -8,6 +8,10 @@ import time
 # from functools import wraps
 
 
+class AlreadyOnTheRun(Exception):
+    pass
+
+
 @dataclass
 class TaskUnit:
     name: str
@@ -17,8 +21,8 @@ class TaskUnit:
     id: str = field(default_factory=uuid)
     create_time: float = field(default_factory=time.time)
 
-    scheduler_job: Job = field(init=False, default=None)
-    task_exectuor: TaskExecutor = field(init=False, default=None)
+    scheduler_job: Job | None = field(init=False, default=None)
+    task_exectuor: TaskExecutor | None = field(init=False, default=None)
     last_exec_time: float = field(init=False, default=0.0)
 
     def can_exec(self) -> bool:
@@ -34,14 +38,15 @@ class TaskUnit:
         logger.info("%s-%s finish execute", self.name, self.id)
         task_manager.unmount_save_session(self.task_exectuor.id)
 
-    def run(self):
+    def run(self) -> str:
         if not self.can_exec():
-            return
+            raise
         from .task_manager import task_manager
 
         self.task_exectuor = TaskExecutor(self.command, self.__on_task_finish)
         self.last_exec_time = time.time()
         task_manager.mount_session(self.task_exectuor)
+        return self.task_exectuor.id
 
     def __task_exec_func(self):
         if self.can_exec():
@@ -55,6 +60,19 @@ class TaskUnit:
                 self.__task_exec_func,
                 CronTrigger.from_crontab(self.crontab_exp),
             )
+
+    def set_active(self, val: bool):
+        if val == self.active:
+            raise AlreadyOnTheRun("task is running")
+        self.active = val
+        if val:
+            if self.scheduler_job is not None:
+                self.scheduler_job.resume()
+                logger.debug("%s-%s task resumed", self.id, self.name)
+        else:
+            if self.scheduler_job is not None:
+                self.scheduler_job.pause()
+                logger.debug("%s-%s task paused", self.id, self.name)
 
     @property
     def running(self) -> bool:

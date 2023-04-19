@@ -1,4 +1,4 @@
-from fastapi import Header, HTTPException
+from fastapi import Header, Cookie, HTTPException
 from auth.auth_manager import auth_manager
 
 
