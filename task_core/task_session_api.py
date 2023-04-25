@@ -39,7 +39,7 @@ async def find_session(form: SessionQuery):
             form.endtime = time.time()
         res.extend(
             query_exp.filter(
-                SessionInfo.invoke_time > form.starttime,
+                SessionInfo.start_time > form.starttime,
                 SessionInfo.finish_time <= form.endtime,
             ).all()
         )

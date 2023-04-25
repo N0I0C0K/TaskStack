@@ -19,10 +19,14 @@ class SessionInfo(Base):
     __tablename__ = "SessionInfo"
 
     id = Column(Text, primary_key=True)
-    invoke_time = Column(Float, nullable=False)  # 触发时间 time.time()
-    finish_time = Column(Float, nullable=False)
     task_id = Column(Text, nullable=False, index=True)
     command = Column(Text, nullable=False)
+    start_time = Column(Float, nullable=False)  # 触发时间 time.time()
+    finish_time = Column(Float, nullable=False)
+    success = Column(Boolean, nullable=True, default=False)
+
+    def to_dict(self):
+        return as_dict(self) | {"running": self.finish_time < 1000}
 
 
 class TaskInfo(Base):

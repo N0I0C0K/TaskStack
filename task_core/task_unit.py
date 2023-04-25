@@ -12,6 +12,10 @@ class AlreadyOnTheRun(Exception):
     pass
 
 
+class CantRunTask(Exception):
+    pass
+
+
 @dataclass
 class TaskUnit:
     name: str
@@ -40,7 +44,7 @@ class TaskUnit:
 
     def run(self) -> str:
         if not self.can_exec():
-            raise
+            raise CantRunTask()
         from .task_manager import task_manager
 
         self.task_exectuor = TaskExecutor(self.command, self.__on_task_finish)

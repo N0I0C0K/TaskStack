@@ -11,6 +11,10 @@ from .form_model import TaskAddForm
 from sqlalchemy import func
 
 
+class CantDelTask(Exception):
+    pass
+
+
 class TaskManager:
     def __init__(self) -> None:
         self.task_dict: dict[str, TaskUnit] = dict()
@@ -28,7 +32,7 @@ class TaskManager:
                 self.task_dict[task.id] = t_task
                 last_exec_time = (
                     sess.query(
-                        func.min(SessionInfo.invoke_time)  # pylint: disable=E1102
+                        func.min(SessionInfo.start_time)  # pylint: disable=E1102
                     )
                     .filter(SessionInfo.id == task.id)
                     .scalar()
@@ -65,7 +69,7 @@ class TaskManager:
         with dataManager.session as sess:
             data_sess = SessionInfo(
                 id=session.id,
-                invoke_time=session.start_time,
+                start_time=session.start_time,
                 finish_time=session.finish_time,
                 task_id=session.task_id,
                 command=session.raw_command,
@@ -76,6 +80,8 @@ class TaskManager:
         self.task_start_event.invoke(session)
 
     def del_task(self, task_id: str):
+        if self.task_dict[task_id].running:
+            raise CantDelTask("task is still running")
         self.task_dict.pop(task_id)
         with dataManager.session as sess:
             task = sess.query(TaskInfo).filter(TaskInfo.id == task_id).one()
