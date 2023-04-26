@@ -11,6 +11,8 @@ from sqlalchemy.orm import Query
 
 from utils.file import output_store_path
 
+from fastapi import WebSocket, WebSocketDisconnect
+
 
 class SessionQuery(BaseModel):
     starttime: float | None
@@ -26,7 +28,7 @@ session_api = APIRouter(prefix="/session", dependencies=[Depends(token_requie)])
 async def find_session(form: SessionQuery):
     res: list[SessionInfo] = []
     with dataManager.session as sess:
-        query_exp: Query = None
+        query_exp: Query
         if form.task_id is not None:
             query_exp = sess.query(SessionInfo).filter(
                 SessionInfo.task_id.in_(form.task_id)
@@ -55,3 +57,13 @@ async def get_session_detail(session_id: str):
         out_file = output_store_path / f"{sess_tar.id}.out"
         out_text = "out put missing" if not out_file.exists() else out_file.read_text()
         return make_response(**as_dict(sess_tar), output=out_text)
+
+
+@session_api.websocket("/communicate")
+async def session_communicate(socket: WebSocket):
+    await socket.accept()
+    try:
+        while True:
+            pass
+    except WebSocketDisconnect:
+        pass

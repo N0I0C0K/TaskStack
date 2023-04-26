@@ -28,8 +28,15 @@ class TaskManager:
     def load_task(self):
         with dataManager.session as sess:
             for task in sess.query(TaskInfo).all():
-                t_task = TaskUnit(**as_dict(task))
-                self.task_dict[task.id] = t_task
+                t_task = TaskUnit(
+                    id=task.id,  # type: ignore
+                    name=task.name,  # type: ignore
+                    command=task.command,  # type: ignore
+                    active=task.active,  # type: ignore
+                    create_time=task.create_time,  # type: ignore
+                    crontab_exp=task.crontab_exp,  # type: ignore
+                )
+                self.task_dict[task.id] = t_task  # type: ignore
                 last_exec_time = (
                     sess.query(
                         func.min(SessionInfo.start_time)  # pylint: disable=E1102
@@ -46,7 +53,7 @@ class TaskManager:
             data_sess = (
                 sess.query(SessionInfo).filter(SessionInfo.id == task_sess.id).one()
             )
-            data_sess.finish_time = task_sess.finish_time
+            data_sess.finish_time = task_sess.finish_time  # type: ignore
             sess.commit()
 
         self.task_finish_event.invoke(task_sess)
@@ -55,9 +62,9 @@ class TaskManager:
         out_file.touch()
 
         with out_file.open("w+", encoding="utf-8") as file:
-            # file.write(
-            #     f"Invoke at {formate_time(task_sess.start_time)}-{formate_time(task_sess.finish_time)}, from task [{task_sess.task_id}]\n\n"
-            # )
+            file.write(
+                f"session run at {formate_time(task_sess.start_time)}-{formate_time(task_sess.finish_time)}, from task [{task_sess.task_id}]\n\n"
+            )
             file.write(task_sess.stdout)
         logger.debug("save the out put to %s", out_file.as_posix())
         logger.debug("%s session unmount and save=> %s", task_sess.id, task_sess)

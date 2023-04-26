@@ -39,6 +39,8 @@ class TaskUnit:
     def __on_task_finish(self):
         from .task_manager import task_manager
 
+        if self.task_exectuor is None:
+            return
         logger.info("%s-%s finish execute", self.name, self.id)
         task_manager.unmount_save_session(self.task_exectuor.id)
 
@@ -64,10 +66,12 @@ class TaskUnit:
                 self.__task_exec_func,
                 CronTrigger.from_crontab(self.crontab_exp),
             )
+            if not self.active:
+                self.scheduler_job.pause()
 
     def set_active(self, val: bool):
         if val == self.active:
-            raise AlreadyOnTheRun("task is running")
+            raise AlreadyOnTheRun()
         self.active = val
         if val:
             if self.scheduler_job is not None:
@@ -80,7 +84,7 @@ class TaskUnit:
 
     @property
     def running(self) -> bool:
-        return self.task_exectuor is not None and not self.task_exectuor.finished
+        return self.task_exectuor is not None and self.task_exectuor.running
 
     def to_dict(self) -> dict:
         # return {
