@@ -40,7 +40,9 @@ class TaskExecutor:
         self.decode_detector = UniversalDetector()
 
         self.stdout_lock = asyncio.Lock()
+
         self.__running = False
+
         from utils.thread_pool import main_loop
 
         self.__run_process_task = main_loop.create_task(self.run_process())
@@ -56,9 +58,6 @@ class TaskExecutor:
                 stderr=subprocess.PIPE,
             )
             self.__running = True
-            # self.task = subprocess.Popen(
-            #     self.command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-            # )
         except OSError as oserr:
             logger.error(oserr)
             raise oserr
@@ -76,12 +75,17 @@ class TaskExecutor:
         logger.info("%s[task:%s] run finished", self.raw_command, self.task_id)
         self.__running = False
         self.finish_time = time.time()
+
         async with self.stdout_lock:
             self.__stdout += self.__decode(await self.task.stdout.read())
             self.__stderr += self.__decode(await self.task.stderr.read())
 
         if self.finish_callback:
             self.finish_callback()
+
+    @property
+    def success(self) -> bool:
+        return self.finished and self.task.returncode == 0
 
     @property
     def finished(self) -> bool:

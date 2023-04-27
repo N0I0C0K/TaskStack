@@ -26,6 +26,9 @@ session_api = APIRouter(prefix="/session", dependencies=[Depends(token_requie)])
 
 @session_api.get("/find")
 async def find_session(form: SessionQuery):
+    """
+    寻找给定时间区间内给定taskid的任务
+    """
     res: list[SessionInfo] = []
     with dataManager.session as sess:
         query_exp: Query
@@ -60,10 +63,20 @@ async def get_session_detail(session_id: str):
 
 
 @session_api.websocket("/communicate")
-async def session_communicate(socket: WebSocket):
+async def session_communicate(session_id: str, *, socket: WebSocket):
+    from .task_manager import task_manager
+
+    task_exector = task_manager.get_exector(session_id)
+    if task_exector is None:
+        await socket.close()
     await socket.accept()
+
     try:
         while True:
-            pass
+            output_line = await task_exector.readline()
+            socket.send_text(output_line)
+
     except WebSocketDisconnect:
         pass
+    finally:
+        socket.close()

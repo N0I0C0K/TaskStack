@@ -49,7 +49,12 @@ class TaskUnit:
             raise CantRunTask()
         from .task_manager import task_manager
 
-        self.task_exectuor = TaskExecutor(self.command, self.__on_task_finish)
+        self.task_exectuor = TaskExecutor(
+            self.command,
+            self.__on_task_finish,
+            task_id=self.id,
+        )
+
         self.last_exec_time = time.time()
         task_manager.mount_session(self.task_exectuor)
         return self.task_exectuor.id
@@ -87,12 +92,13 @@ class TaskUnit:
         return self.task_exectuor is not None and self.task_exectuor.running
 
     def to_dict(self) -> dict:
-        # return {
-        #     "id": self.id,
-        #     "name": self.name,
-        #     "active": self.active,
-        #     "create_time": self.create_time,
-        #     "command": self.command,
-        #     "crontab_exp": self.crontab_exp,
-        # }
-        return self.__dict__ | {"running": self.running}
+        return {
+            "id": self.id,
+            "name": self.name,
+            "active": self.active,
+            "create_time": self.create_time,
+            "last_exec_time": self.last_exec_time,
+            "command": self.command,
+            "crontab_exp": self.crontab_exp,
+            "running": self.running,
+        }

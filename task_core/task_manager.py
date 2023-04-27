@@ -53,7 +53,8 @@ class TaskManager:
             data_sess = (
                 sess.query(SessionInfo).filter(SessionInfo.id == task_sess.id).one()
             )
-            data_sess.finish_time = task_sess.finish_time  # type: ignore
+            data_sess.finish_time = task_sess.finish_time
+            data_sess.success = task_sess.success
             sess.commit()
 
         self.task_finish_event.invoke(task_sess)
@@ -97,6 +98,9 @@ class TaskManager:
 
     def get_task(self, task_id: str) -> TaskUnit | None:
         return self.task_dict.get(task_id, None)
+
+    def get_exector(self, session_id: str) -> TaskExecutor | None:
+        return self.session_dict.get(session_id, None)
 
     def add_task(self, add_task: TaskAddForm) -> TaskUnit:
         new_task = TaskUnit(
