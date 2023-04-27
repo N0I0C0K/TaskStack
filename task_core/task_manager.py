@@ -15,6 +15,10 @@ class CantDelTask(Exception):
     pass
 
 
+class TaskStillRunning(Exception):
+    pass
+
+
 class TaskManager:
     def __init__(self) -> None:
         self.task_dict: dict[str, TaskUnit] = dict()
@@ -49,6 +53,10 @@ class TaskManager:
 
     def unmount_save_session(self, sessionid: str):
         task_sess = self.session_dict.pop(sessionid)
+
+        if task_sess.running:
+            raise TaskStillRunning
+
         with dataManager.session as sess:
             data_sess = (
                 sess.query(SessionInfo).filter(SessionInfo.id == task_sess.id).one()

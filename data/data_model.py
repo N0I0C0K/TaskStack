@@ -26,7 +26,7 @@ class SessionInfo(Base):
     success = Column(Boolean, nullable=True, default=False)
 
     def to_dict(self):
-        return as_dict(self) | {"running": self.finish_time < 1000}
+        return as_dict(self) | {"running": self.finish_time < self.start_time}
 
 
 class TaskInfo(Base):

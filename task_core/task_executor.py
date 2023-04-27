@@ -76,9 +76,7 @@ class TaskExecutor:
         self.__running = False
         self.finish_time = time.time()
 
-        async with self.stdout_lock:
-            self.__stdout += self.__decode(await self.task.stdout.read())
-            self.__stderr += self.__decode(await self.task.stderr.read())
+        await self.flush_stdout()
 
         if self.finish_callback:
             self.finish_callback()

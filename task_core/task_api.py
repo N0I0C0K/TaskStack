@@ -78,7 +78,7 @@ async def query_task_history(task: TaskUnit = Depends(task_id_require)):
         )
         return make_response(
             HttpState.SUCCESS,
-            sessions=[as_dict(x) for x in task_sess],
+            sessions=[x.to_dict() for x in task_sess],
         )
 
 
