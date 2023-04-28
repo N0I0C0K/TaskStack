@@ -3,13 +3,14 @@ import shlex
 
 # import subprocess
 import time
-from typing import Callable
-
 from asyncio import subprocess
 from asyncio.subprocess import Process
-from utils import auto_decode, logger, uuid
+from typing import Callable
 
 from chardet import UniversalDetector
+
+from utils import auto_decode, logger, uuid
+from utils.thread_pool import thread_pool
 
 
 class TaskExecutor:
@@ -93,9 +94,10 @@ class TaskExecutor:
     def running(self) -> bool:
         return self.__running
 
-    def kill(self):
+    async def kill(self):
         if self.task:
             self.task.kill()
+            await self.wait()
 
     def __decode(self, src: bytes) -> str:
         if not self.decode_detector.done:

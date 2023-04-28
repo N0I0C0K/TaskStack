@@ -3,6 +3,7 @@ from utils import logger, formate_time
 from utils.file import output_store_path
 
 from utils.event import Event
+from utils.thread_pool import thread_pool
 
 from .task_executor import TaskExecutor
 from .task_unit import TaskUnit

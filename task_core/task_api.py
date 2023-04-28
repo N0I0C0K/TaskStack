@@ -85,3 +85,8 @@ async def query_task_history(task: TaskUnit = Depends(task_id_require)):
 @task_api.get("/run")
 async def run_task(task: TaskUnit = Depends(task_id_require)):
     return make_response(session_id=task.run())
+
+
+@task_api.get("/stop")
+async def stop_task(task: TaskUnit = Depends(task_id_require)):
+    return make_response(success=(await task.stop()))

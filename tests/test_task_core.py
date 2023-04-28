@@ -27,6 +27,21 @@ async def test_task_iter_return():
 
 
 @mark.asyncio
+async def test_taskexector_kill():
+    from utils.thread_pool import set_main_loop
+    from task_core.task_executor import TaskExecutor
+
+    set_main_loop(asyncio.get_running_loop())
+
+    a = TaskExecutor("timeout /t 100 > nul & echo Hello World")
+    await a.wait_until_run()
+    assert a.running == True
+    a.kill()
+    await a.wait()
+    assert a.running == False
+
+
+@mark.asyncio
 async def test_add_del_task():
     from task_core.form_model import TaskAddForm
     from task_core.task_manager import task_manager

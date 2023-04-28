@@ -1,9 +1,12 @@
-from dataclasses import dataclass, field
-from utils.scheduler import scheduler, Job, CronTrigger
-from .task_executor import TaskExecutor
-from utils import logger, uuid
-
 import time
+from dataclasses import dataclass, field
+
+from utils import logger, uuid
+from utils.scheduler import CronTrigger, Job, scheduler
+
+from .task_executor import TaskExecutor
+
+from utils.thread_pool import thread_pool
 
 # from functools import wraps
 
@@ -13,6 +16,10 @@ class AlreadyOnTheRun(Exception):
 
 
 class CantRunTask(Exception):
+    pass
+
+
+class NotRunning(Exception):
     pass
 
 
@@ -42,7 +49,7 @@ class TaskUnit:
         if self.task_exectuor is None:
             return
         logger.info("%s-%s finish execute", self.name, self.id)
-        task_manager.unmount_save_session(self.task_exectuor.id)
+        thread_pool.submit(task_manager.unmount_save_session, self.task_exectuor.id)
 
     def run(self) -> str:
         if not self.can_exec():
@@ -58,6 +65,12 @@ class TaskUnit:
         self.last_exec_time = time.time()
         task_manager.mount_session(self.task_exectuor)
         return self.task_exectuor.id
+
+    async def stop(self) -> bool:
+        if not self.running:
+            raise NotRunning
+        await self.task_exectuor.kill()
+        return True
 
     def __task_exec_func(self):
         if self.can_exec():
