@@ -133,9 +133,6 @@ class TaskExecutor:
 
     @property
     def stdout(self) -> str:
-        if self.running:
-            # cant read unfinished task
-            return self.__stdout
         return self.__stdout
 
     @property

@@ -1,19 +1,16 @@
-import time
 import asyncio
+import time
+
 import aiofiles
-
-from utils.api_utils import make_response, HttpState
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
-
-from data import SessionInfo, dataManager, as_dict
-from utils.api_base_func import token_requie
-
 from sqlalchemy.orm import Query
 
+from task_core.task_manager import task_manager
+from data import SessionInfo, as_dict, dataManager
+from utils.api_base_func import token_requie
+from utils.api_utils import HttpState, make_response
 from utils.file import output_store_path
-
-from fastapi import WebSocket, WebSocketDisconnect
 
 
 class SessionQuery(BaseModel):
@@ -59,29 +56,40 @@ async def get_session_detail(session_id: str):
         sess_tar = sess.query(SessionInfo).filter(SessionInfo.id == session_id).first()
         if sess_tar is None:
             return make_response(HttpState.CANT_FIND)
-        out_file = output_store_path / f"{sess_tar.id}.out"
         out_text = "out put missing"
-        if out_file.exists():
-            async with aiofiles.open(out_file.as_posix()) as file:
-                out_text = await file.read()
+        if sess_tar.running:
+            exector = task_manager.get_exector(session_id)
+            out_text = exector.stdout
+        else:
+            out_file = output_store_path / f"{sess_tar.id}.out"
+            if out_file.exists():
+                async with aiofiles.open(out_file.as_posix()) as file:
+                    out_text = await file.read()
         return make_response(**as_dict(sess_tar), output=out_text)
 
 
 @session_api.websocket("/communicate")
 async def session_communicate(session_id: str, *, socket: WebSocket):
-    from .task_manager import task_manager
-
     task_exector = task_manager.get_exector(session_id)
+
     if task_exector is None:
         await socket.close()
+
     await socket.accept()
 
-    try:
-        while True:
-            output_line = await task_exector.readline()
-            socket.send_text(output_line)
+    async def communicate():
+        try:
+            await socket.receive_text()
+            while True:
+                output_line = await task_exector.readline()
+                await socket.send_text(output_line)
+                if task_exector.finished:
+                    break
+            await socket.send_text(f"task-{session_id} over")
+        except WebSocketDisconnect:
+            await socket.close()
+        finally:
+            await socket.close()
 
-    except WebSocketDisconnect:
-        pass
-    finally:
-        socket.close()
+    t = communicate()
+    asyncio.run_coroutine_threadsafe()

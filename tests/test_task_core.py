@@ -17,7 +17,7 @@ async def test_task_iter_return():
         "temp.exe"
     )  # TaskExecutor("timeout /t 3 > nul & echo Hello World")
     await a.wait_until_run()
-
+    assert a.stdout == ""
     while a.running:
         print(await a.readline())
 

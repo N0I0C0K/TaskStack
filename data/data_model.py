@@ -28,6 +28,10 @@ class SessionInfo(Base):
     def to_dict(self):
         return as_dict(self) | {"running": self.finish_time < self.start_time}
 
+    @property
+    def running(self):
+        return self.finish_time < self.start_time
+
 
 class TaskInfo(Base):
     __tablename__ = "TaskInfo"
