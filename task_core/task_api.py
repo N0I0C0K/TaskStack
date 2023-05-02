@@ -1,14 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi.websockets import WebSocketState
 
+import asyncio
+
+from data import SessionInfo, as_dict, dataManager
 from utils.api_base_func import token_requie
-from utils.api_utils import make_response, HttpState
-
-from data import dataManager, SessionInfo, as_dict
+from utils.api_utils import HttpState, make_response
+from task_core.task_executor import TaskExecutor
 
 from .form_model import TaskAddForm
-from .task_session_api import session_api
-
 from .task_manager import task_manager as manager
+from .task_session_api import session_api
 from .task_unit import TaskUnit
 
 task_api = APIRouter(prefix="/task", dependencies=[Depends(token_requie)])
@@ -90,3 +92,41 @@ async def run_task(task: TaskUnit = Depends(task_id_require)):
 @task_api.get("/stop")
 async def stop_task(task: TaskUnit = Depends(task_id_require)):
     return make_response(success=(await task.stop()))
+
+
+@task_api.websocket("/listener")
+async def task_event_listener(websocket: WebSocket):
+    await websocket.accept()
+
+    async def task_start(exector: TaskExecutor):
+        await websocket.send_json(
+            {
+                "event": "task_start",
+                "session_id": exector.id,
+                "task_id": exector.task_id,
+            }
+        )
+
+    async def task_finish(exector: TaskExecutor):
+        await websocket.send_json(
+            {
+                "event": "task_finish",
+                "session_id": exector.id,
+                "task_id": exector.task_id,
+            }
+        )
+
+    try:
+        manager.task_start_event += task_start
+        manager.task_finish_event += task_finish
+
+        while websocket.client_state == WebSocketState.CONNECTING:
+            await asyncio.sleep(2)
+
+    except WebSocketDisconnect:
+        pass
+    finally:
+        await websocket.close()
+
+        manager.task_start_event += task_start
+        manager.task_finish_event += task_finish
