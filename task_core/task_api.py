@@ -4,7 +4,7 @@ from fastapi.websockets import WebSocketState
 import asyncio
 
 from data import SessionInfo, as_dict, dataManager
-from utils.api_base_func import token_requie
+from utils.api_base_func import token_requie, token_websocket_require
 from utils.api_utils import HttpState, make_response
 from task_core.task_executor import TaskExecutor
 
@@ -95,10 +95,15 @@ async def stop_task(task: TaskUnit = Depends(task_id_require)):
 
 
 @task_api.websocket("/listener")
-async def task_event_listener(websocket: WebSocket):
+async def task_event_listener(
+    websocket: WebSocket, token=Depends(token_websocket_require)
+):
     await websocket.accept()
 
+    print("link to listener")
+
     async def task_start(exector: TaskExecutor):
+        print(f"task start\n {exector}")
         await websocket.send_json(
             {
                 "event": "task_start",
@@ -108,6 +113,7 @@ async def task_event_listener(websocket: WebSocket):
         )
 
     async def task_finish(exector: TaskExecutor):
+        print(f"task finish\n {exector}")
         await websocket.send_json(
             {
                 "event": "task_finish",
@@ -120,7 +126,7 @@ async def task_event_listener(websocket: WebSocket):
         manager.task_start_event += task_start
         manager.task_finish_event += task_finish
 
-        while websocket.client_state == WebSocketState.CONNECTING:
+        while websocket.client_state == WebSocketState.CONNECTED:
             await asyncio.sleep(2)
 
     except WebSocketDisconnect:
@@ -128,5 +134,5 @@ async def task_event_listener(websocket: WebSocket):
     finally:
         await websocket.close()
 
-        manager.task_start_event += task_start
-        manager.task_finish_event += task_finish
+        manager.task_start_event -= task_start
+        manager.task_finish_event -= task_finish

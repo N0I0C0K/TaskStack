@@ -10,12 +10,15 @@ from typing import Callable
 from chardet import UniversalDetector
 
 from utils import auto_decode, logger, uuid, formate_time
-from utils.thread_pool import thread_pool
 
 
 class TaskExecutor:
     def __init__(
-        self, command: str, finish_callback: Callable | None = None, task_id: str = ""
+        self,
+        command: str,
+        finish_callback: Callable | None = None,
+        task_id: str = "",
+        loop: asyncio.AbstractEventLoop | None = None,
     ) -> None:
         """
         任务执行单元
@@ -44,7 +47,7 @@ class TaskExecutor:
 
         self.__running = False
 
-        self.__task_run_loop = asyncio.get_running_loop()
+        self.__task_run_loop = asyncio.get_running_loop() if loop is None else loop
 
         self.__run_process_task = self.__task_run_loop.create_task(self.run_process())
 
@@ -149,4 +152,4 @@ class TaskExecutor:
         )
 
     def __repr__(self) -> str:
-        return f"{self.command}"
+        return self.info

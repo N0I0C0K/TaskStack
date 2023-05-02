@@ -6,7 +6,7 @@ from utils.scheduler import CronTrigger, Job, scheduler
 
 from .task_executor import TaskExecutor
 
-from utils.thread_pool import thread_pool
+from utils.thread_pool import thread_pool, main_loop
 
 # from functools import wraps
 
@@ -49,7 +49,7 @@ class TaskUnit:
         if self.task_exectuor is None:
             return
         logger.info("%s-%s finish execute", self.name, self.id)
-        thread_pool.submit(task_manager.unmount_save_session, self.task_exectuor.id)
+        task_manager.unmount_save_session(self.task_exectuor.id)
 
     def run(self) -> str:
         if not self.can_exec():
@@ -60,6 +60,7 @@ class TaskUnit:
             self.command,
             self.__on_task_finish,
             task_id=self.id,
+            loop=main_loop,
         )
 
         self.last_exec_time = time.time()

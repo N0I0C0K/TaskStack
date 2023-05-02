@@ -78,7 +78,7 @@ class TaskManager:
         logger.debug("%s session unmount and save=> %s", task_sess.id, task_sess)
 
     def mount_session(self, session: TaskExecutor):
-        logger.debug("%s session mount => %s", session.id, session)
+        logger.debug("%s session mount => %s", session.id, session.command)
         self.session_dict[session.id] = session
 
         with dataManager.session as sess:
