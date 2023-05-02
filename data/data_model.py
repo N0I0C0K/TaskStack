@@ -32,6 +32,10 @@ class SessionInfo(Base):
     def running(self):
         return self.finish_time < self.start_time
 
+    @property
+    def finish(self):
+        return self.finish_time >= self.start_time
+
 
 class TaskInfo(Base):
     __tablename__ = "TaskInfo"

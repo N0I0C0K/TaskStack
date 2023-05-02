@@ -50,13 +50,13 @@ async def find_session(form: SessionQuery):
     return make_response(session=[as_dict(x) for x in res])
 
 
-@session_api.get("/get")
-async def get_session_detail(session_id: str):
+@session_api.get("/output")
+async def get_session_output(session_id: str):
     with dataManager.session as sess:
         sess_tar = sess.query(SessionInfo).filter(SessionInfo.id == session_id).first()
         if sess_tar is None:
             return make_response(HttpState.CANT_FIND)
-        out_text = "out put missing"
+        out_text = f"output missing"
         if sess_tar.running:
             exector = task_manager.get_exector(session_id)
             out_text = exector.stdout
@@ -65,7 +65,18 @@ async def get_session_detail(session_id: str):
             if out_file.exists():
                 async with aiofiles.open(out_file.as_posix()) as file:
                     out_text = await file.read()
-        return make_response(**as_dict(sess_tar), output=out_text)
+        return make_response(
+            session_id=session_id, finish=sess_tar.finish, output=out_text
+        )
+
+
+@session_api.get("/info")
+async def get_sesion_info(session_id: str):
+    with dataManager.session as sess:
+        sess_tar = sess.query(SessionInfo).filter(SessionInfo.id == session_id).first()
+        if sess_tar is None:
+            return make_response(HttpState.CANT_FIND)
+        return make_response(sess_tar.to_dict())
 
 
 @session_api.websocket("/communicate")
@@ -74,22 +85,18 @@ async def session_communicate(session_id: str, *, socket: WebSocket):
 
     if task_exector is None:
         await socket.close()
+        return
 
     await socket.accept()
-
-    async def communicate():
-        try:
-            await socket.receive_text()
-            while True:
-                output_line = await task_exector.readline()
-                await socket.send_text(output_line)
-                if task_exector.finished:
-                    break
-            await socket.send_text(f"task-{session_id} over")
-        except WebSocketDisconnect:
-            await socket.close()
-        finally:
-            await socket.close()
-
-    t = communicate()
-    asyncio.run_coroutine_threadsafe()
+    try:
+        await socket.receive_text()
+        while True:
+            output_line = await task_exector.readline()
+            await socket.send_text(output_line)
+            if task_exector.finished:
+                break
+        await socket.send_text(f"task-{session_id} over")
+    except WebSocketDisconnect:
+        await socket.close()
+    finally:
+        await socket.close()

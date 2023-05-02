@@ -9,7 +9,7 @@ from typing import Callable
 
 from chardet import UniversalDetector
 
-from utils import auto_decode, logger, uuid
+from utils import auto_decode, logger, uuid, formate_time
 from utils.thread_pool import thread_pool
 
 
@@ -44,9 +44,9 @@ class TaskExecutor:
 
         self.__running = False
 
-        from utils.thread_pool import main_loop
+        self.__task_run_loop = asyncio.get_running_loop()
 
-        self.__run_process_task = main_loop.create_task(self.run_process())
+        self.__run_process_task = self.__task_run_loop.create_task(self.run_process())
 
     async def wait_until_run(self):
         await self.__run_process_task
@@ -66,9 +66,9 @@ class TaskExecutor:
             logger.error(valerr)
             raise valerr
         else:
-            from utils.thread_pool import main_loop
-
-            self.finish_check_task = main_loop.create_task(self.__finish_check())
+            self.finish_check_task = self.__task_run_loop.create_task(
+                self.__finish_check()
+            )
             logger.info("Start execute => %s", self.command)
 
     async def __finish_check(self):
@@ -138,6 +138,15 @@ class TaskExecutor:
     @property
     def stderr(self) -> str:
         return self.__stderr
+
+    @property
+    def info(self) -> str:
+        return (
+            f"- Session id: {self.id}\n"
+            f"- {formate_time(self.start_time)}-{formate_time(self.finish_time)}\n"
+            f"- From task: {self.task_id}\n"
+            f"- Command: {self.raw_command}\n"
+        )
 
     def __repr__(self) -> str:
         return f"{self.command}"
