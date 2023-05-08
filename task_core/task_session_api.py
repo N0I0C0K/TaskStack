@@ -23,6 +23,17 @@ class SessionQuery(BaseModel):
 session_api = APIRouter(prefix="/session", dependencies=[Depends(token_requie)])
 
 
+@session_api.get("/all")
+async def get_all_session(start: int, num: int):
+    with dataManager.session as sess:
+        all_seg = sess.query(SessionInfo)
+        sessions = all_seg.offset(start).limit(num).all()
+
+        return make_response(
+            all_nums=all_seg.count(), sessions=[ts.to_dict() for ts in sessions]
+        )
+
+
 @session_api.get("/find")
 async def find_session(form: SessionQuery):
     """

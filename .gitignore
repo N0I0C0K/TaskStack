@@ -4,3 +4,4 @@ log
 database.db
 .*
 temp.exe
+test.py

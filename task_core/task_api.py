@@ -1,8 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.websockets import WebSocketState
 
-import asyncio
-
 from data import SessionInfo, as_dict, dataManager
 from utils.api_base_func import token_requie, token_websocket_require
 from utils.api_utils import HttpState, make_response
