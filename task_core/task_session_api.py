@@ -70,7 +70,8 @@ async def get_session_output(session_id: str):
         out_text = f"output missing"
         if sess_tar.running:
             exector = task_manager.get_exector(session_id)
-            out_text = exector.stdout
+            if exector is not None:
+                out_text = exector.stdout
         else:
             out_file = output_store_path / f"{sess_tar.id}.out"
             if out_file.exists():
@@ -88,6 +89,15 @@ async def get_sesion_info(session_id: str):
         if sess_tar is None:
             return make_response(HttpState.CANT_FIND)
         return make_response(sess_tar.to_dict())
+
+
+@session_api.get("/stop")
+async def stop_session(session_id: str):
+    exector = task_manager.get_exector(session_id)
+    if exector is None:
+        return make_response(HttpState.CANT_FIND)
+    await exector.kill()
+    return make_response(HttpState.SUCCESS)
 
 
 @session_api.websocket("/communicate")
@@ -108,6 +118,6 @@ async def session_communicate(session_id: str, *, socket: WebSocket):
                 break
         await socket.send_text(f"task-{session_id} over")
     except WebSocketDisconnect:
-        await socket.close()
-    finally:
+        pass
+    else:
         await socket.close()

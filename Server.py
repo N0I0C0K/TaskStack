@@ -1,11 +1,11 @@
-from fastapi import FastAPI, APIRouter
-from utils.thread_pool import main_loop
-from uvicorn import Config, Server
-
+from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from uvicorn import Config, Server
 
 from auth.auth_api import auth_api
 from task_core.task_api import task_api
+from utils.scheduler import scheduler
+from utils.thread_pool import main_loop
 
 app = FastAPI(title="TaskStack", description="A simple task manager run on server")
 
@@ -27,6 +27,7 @@ app.include_router(api_router)
 def main():
     config = Config(app, "0.0.0.0", 5555, loop=main_loop)
     server = Server(config=config)
+    scheduler.start()
     main_loop.run_until_complete(server.serve())
 
 

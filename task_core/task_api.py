@@ -140,7 +140,7 @@ async def task_event_listener(
                 break
         await websocket.close()
     except WebSocketDisconnect:
-        await websocket.close()
+        pass
     finally:
         logger.debug("disconnect listener")
         manager.task_start_event -= task_start

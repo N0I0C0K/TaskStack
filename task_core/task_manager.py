@@ -29,6 +29,22 @@ class TaskManager:
         self.task_finish_event: Event[TaskExecutor] = Event[TaskExecutor]()
 
         self.load_task()
+        self.handle_last_unfinish_session()
+
+    def handle_last_unfinish_session(self):
+        """
+        handel unexpect exit process session during last run.
+        """
+        with dataManager.session as sess:
+            error_session = (
+                sess.query(SessionInfo)
+                .filter(SessionInfo.finish_time < SessionInfo.start_time)
+                .all()
+            )
+            for es in error_session:
+                es.finish_time = es.start_time
+                es.success = False
+            sess.commit()
 
     def load_task(self):
         with dataManager.session as sess:
@@ -53,6 +69,8 @@ class TaskManager:
                     t_task.last_exec_time = last_exec_time
 
     def unmount_save_session(self, sessionid: str):
+        from utils.thread_pool import main_loop
+
         task_sess = self.session_dict.pop(sessionid)
 
         if task_sess.running:
@@ -66,7 +84,7 @@ class TaskManager:
             data_sess.success = task_sess.success
             sess.commit()
 
-        self.task_finish_event.invoke(task_sess)
+        self.task_finish_event.invoke(task_sess, loop=main_loop)
 
         out_file = output_store_path / f"{task_sess.id}.out"
         out_file.touch()
@@ -78,7 +96,7 @@ class TaskManager:
         logger.debug("%s session unmount and save=> %s", task_sess.id, task_sess)
 
     def mount_session(self, session: TaskExecutor):
-        logger.debug("%s session mount => %s", session.id, session.command)
+        logger.debug("%s session mount => %s", session.id, session.raw_command)
         self.session_dict[session.id] = session
 
         with dataManager.session as sess:
@@ -91,8 +109,9 @@ class TaskManager:
             )
             sess.add(data_sess)
             sess.commit()
+        from utils.thread_pool import main_loop
 
-        self.task_start_event.invoke(session)
+        self.task_start_event.invoke(session, loop=main_loop)
 
     def del_task(self, task_id: str):
         if self.task_dict[task_id].running:
@@ -119,7 +138,14 @@ class TaskManager:
 
         # TODO 检测name是否有重复值
         with dataManager.session as sess:
-            task_model = TaskInfo(**new_task.__dict__)
+            task_model = TaskInfo(
+                id=new_task.id,
+                name=new_task.name,
+                active=new_task.active,
+                create_time=new_task.create_time,
+                command=new_task.command,
+                crontab_exp=new_task.crontab_exp,
+            )
             sess.add(task_model)
             sess.commit()
 

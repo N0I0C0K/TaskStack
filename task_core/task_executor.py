@@ -26,7 +26,7 @@ class TaskExecutor:
         """
         assert len(command) > 0
         self.raw_command = command
-        self.command = shlex.split(command)
+        self.command = command
 
         self.start_time = time.time()
         self.finish_time = 0.0
@@ -72,7 +72,7 @@ class TaskExecutor:
             self.finish_check_task = self.__task_run_loop.create_task(
                 self.__finish_check()
             )
-            logger.info("Start execute => %s", self.command)
+            logger.info("Start execute => %s", self.raw_command)
 
     async def __finish_check(self):
         await self.task.wait()
@@ -106,8 +106,11 @@ class TaskExecutor:
         if not self.decode_detector.done:
             self.decode_detector.feed(src)
         if not self.decode_detector.done:
-            return src.decode()
+            return src.decode(errors="replace")
         return src.decode(self.decode_detector.result["encoding"])
+
+    async def __decode_async(self, src: bytes) -> str:
+        return await self.__task_run_loop.run_in_executor(None, self.__decode, src)
 
     async def wait(self, timeout: float | None = None) -> int:
         if self.finish_check_task is None:
@@ -124,14 +127,14 @@ class TaskExecutor:
             # in order to prevent too fast response block the thread
             await asyncio.sleep(0.1)
             return ""
-        line_str = self.__decode(line_byte)
+        line_str = await self.__decode_async(line_byte)
         self.__stdout += line_str
         return line_str
 
     async def flush_stdout(self) -> str:
         async with self.stdout_lock:
-            self.__stdout += self.__decode(await self.task.stdout.read())
-            self.__stderr += self.__decode(await self.task.stderr.read())
+            self.__stdout += await self.__decode_async(await self.task.stdout.read())
+            self.__stderr += await self.__decode_async(await self.task.stderr.read())
         return self.__stdout
 
     @property
@@ -145,6 +148,7 @@ class TaskExecutor:
     @property
     def info(self) -> str:
         return (
+            "\n"
             f"- Session id: {self.id}\n"
             f"- {formate_time(self.start_time)}-{formate_time(self.finish_time)}\n"
             f"- From task: {self.task_id}\n"

@@ -28,7 +28,7 @@ class TaskUnit:
     name: str
     command: str
     active: bool = True
-    crontab_exp: str = ""
+    crontab_exp: str | None = None
     id: str = field(default_factory=uuid)
     create_time: float = field(default_factory=time.time)
 
@@ -74,10 +74,11 @@ class TaskUnit:
         return True
 
     def __task_exec_func(self):
-        if self.can_exec():
+        logger.info("%s-%s scheduler start execute", self.name, self.id)
+        if not self.can_exec():
             return
-        logger.info("%s-%s start execute", self.name, self.id)
         self.run()
+        logger.info("%s-%s scheduler execute success", self.name, self.id)
 
     def __post_init__(self):
         if self.crontab_exp is not None and len(self.crontab_exp) > 0:
