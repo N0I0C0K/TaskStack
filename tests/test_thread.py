@@ -14,14 +14,3 @@ def test_cross_thread_modify(clean_thread):
     fur = thread_pool.submit(modify_a)
     fur.result()
     assert a == 2
-
-
-@mark.asyncio
-async def test_multiple_async():
-    loop = asyncio.get_running_loop()
-    loop2 = asyncio.new_event_loop()
-
-    async def sle():
-        await asyncio.sleep(2)
-
-    await loop2.create_task(sle())

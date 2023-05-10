@@ -21,6 +21,7 @@ class SessionInfo(Base):
     id = Column(Text, primary_key=True)
     task_id = Column(Text, nullable=False, index=True)
     command = Column(Text, nullable=False)
+    command_input = Column(Text, nullable=True)
     start_time = Column(Float, nullable=False)  # 触发时间 time.time()
     finish_time = Column(Float, nullable=False)
     success = Column(Boolean, nullable=True, default=False)
@@ -46,3 +47,4 @@ class TaskInfo(Base):
     create_time = Column(Float, nullable=False)
     command = Column(Text, nullable=False)
     crontab_exp = Column(Text, nullable=True)
+    command_input = Column(Text, nullable=True)

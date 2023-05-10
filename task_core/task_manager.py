@@ -50,14 +50,15 @@ class TaskManager:
         with dataManager.session as sess:
             for task in sess.query(TaskInfo).all():
                 t_task = TaskUnit(
-                    id=task.id,  # type: ignore
-                    name=task.name,  # type: ignore
-                    command=task.command,  # type: ignore
-                    active=task.active,  # type: ignore
-                    create_time=task.create_time,  # type: ignore
-                    crontab_exp=task.crontab_exp,  # type: ignore
+                    id=task.id,
+                    name=task.name,
+                    command=task.command,
+                    active=task.active,
+                    create_time=task.create_time,
+                    crontab_exp=task.crontab_exp,
+                    command_input=task.command_input,
                 )
-                self.task_dict[task.id] = t_task  # type: ignore
+                self.task_dict[task.id] = t_task
                 last_exec_time = (
                     sess.query(
                         func.min(SessionInfo.start_time)  # pylint: disable=E1102
@@ -106,6 +107,7 @@ class TaskManager:
                 finish_time=session.finish_time,
                 task_id=session.task_id,
                 command=session.raw_command,
+                command_input=session.command_input,
             )
             sess.add(data_sess)
             sess.commit()

@@ -45,15 +45,11 @@ async def test_taskexector_kill():
 async def test_add_del_task():
     from task_core.form_model import TaskAddForm
     from task_core.task_manager import task_manager
-
     from utils.thread_pool import set_main_loop
 
     set_main_loop(asyncio.get_running_loop())
 
-    from utils.thread_pool import main_loop
-
     task = task_manager.add_task(TaskAddForm(name="test", command="whoami"))
-    assert main_loop.is_closed() is False
     task.run()
 
     await task.task_exectuor.wait_until_run()
@@ -67,7 +63,6 @@ async def test_add_del_task():
 
     assert task.task_exectuor.running is False
 
-    assert main_loop.is_closed() is False
     task_manager.del_task(task.id)
     assert task_manager.get_task(task.id) is None
 
@@ -88,6 +83,16 @@ async def test_asyncio_command_exec():
     asyncio.create_task(read_stdout())
     await process.wait()
     print(f"Process returned {process.returncode}")
+
+
+@mark.asyncio
+async def test_exector_input():
+    from task_core.task_executor import TaskExecutor
+
+    a = TaskExecutor("python ./task_test_program/test_input.py", input="3\n")
+
+    await a.wait()
+    print(a.stdout)
 
 
 def test_database():

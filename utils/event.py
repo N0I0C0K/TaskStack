@@ -10,9 +10,12 @@ class Event(Generic[T]):
         self.actions: set[Callable[[T], None]] = set()
 
     def invoke(self, p: T, *, loop: asyncio.AbstractEventLoop | None = None):
-        loop = asyncio.get_running_loop() if loop is None else loop
+        try:
+            loop = asyncio.get_running_loop() if loop is None else loop
+        except:
+            pass
         for func in self.actions:
-            if asyncio.iscoroutinefunction(func):
+            if asyncio.iscoroutinefunction(func) and loop is not None:
                 loop.create_task(func(p))
             else:
                 func(p)

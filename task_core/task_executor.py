@@ -19,6 +19,7 @@ class TaskExecutor:
         finish_callback: Callable | None = None,
         task_id: str = "",
         loop: asyncio.AbstractEventLoop | None = None,
+        input: str | None = None,
     ) -> None:
         """
         任务执行单元
@@ -27,6 +28,7 @@ class TaskExecutor:
         assert len(command) > 0
         self.raw_command = command
         self.command = command
+        self.command_input = input
 
         self.start_time = time.time()
         self.finish_time = 0.0
@@ -50,6 +52,7 @@ class TaskExecutor:
         self.__task_run_loop = asyncio.get_running_loop() if loop is None else loop
 
         self.__run_process_task = self.__task_run_loop.create_task(self.run_process())
+        self.__started = asyncio.Event()
 
     async def wait_until_run(self):
         await self.__run_process_task
@@ -60,8 +63,11 @@ class TaskExecutor:
                 self.raw_command,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
+                stdin=subprocess.PIPE,
             )
             self.__running = True
+            if self.command_input is not None:
+                self.task.stdin.write(self.command_input.encode())
         except OSError as oserr:
             logger.error(oserr)
             raise oserr
@@ -73,6 +79,7 @@ class TaskExecutor:
                 self.__finish_check()
             )
             logger.info("Start execute => %s", self.raw_command)
+            self.__started.set()
 
     async def __finish_check(self):
         await self.task.wait()
@@ -113,9 +120,12 @@ class TaskExecutor:
         return await self.__task_run_loop.run_in_executor(None, self.__decode, src)
 
     async def wait(self, timeout: float | None = None) -> int:
-        if self.finish_check_task is None:
+        await self.wait_until_run()
+        if self.finish_check_task is not None:
+            await self.finish_check_task
+        else:
+            logger.warning("task finish callback is None")
             raise ValueError
-        await self.finish_check_task
         return self.task.returncode
 
     async def readline(self) -> str:
@@ -153,6 +163,7 @@ class TaskExecutor:
             f"- {formate_time(self.start_time)}-{formate_time(self.finish_time)}\n"
             f"- From task: {self.task_id}\n"
             f"- Command: {self.raw_command}\n"
+            f"- Input: {'' if self.command_input is None else self.command_input}"
         )
 
     def __repr__(self) -> str:

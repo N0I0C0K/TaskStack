@@ -1,4 +1,5 @@
 from concurrent.futures import Future, ThreadPoolExecutor
+from deprecated import deprecated
 import asyncio
 import threading
 
@@ -47,6 +48,7 @@ def get_loop_in_other_thread() -> asyncio.AbstractEventLoop:
 __second_loop: asyncio.AbstractEventLoop = None
 
 
+@deprecated("may lead this program unstable")
 def get_second_loop() -> asyncio.AbstractEventLoop:
     global __second_loop
     if __second_loop is not None:

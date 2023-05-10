@@ -6,7 +6,6 @@ from utils.scheduler import CronTrigger, Job, scheduler
 
 from .task_executor import TaskExecutor
 
-from utils.thread_pool import thread_pool, main_loop
 
 # from functools import wraps
 
@@ -29,6 +28,7 @@ class TaskUnit:
     command: str
     active: bool = True
     crontab_exp: str | None = None
+    command_input: str | None = None
     id: str = field(default_factory=uuid)
     create_time: float = field(default_factory=time.time)
 
@@ -55,12 +55,14 @@ class TaskUnit:
         if not self.can_exec():
             raise CantRunTask()
         from .task_manager import task_manager
+        from utils.thread_pool import main_loop
 
         self.task_exectuor = TaskExecutor(
             self.command,
             self.__on_task_finish,
             task_id=self.id,
             loop=main_loop,
+            input=self.command_input,
         )
 
         self.last_exec_time = time.time()

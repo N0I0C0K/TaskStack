@@ -41,7 +41,3 @@ async def test_async_event():
     ev.invoke(2)
     await asyncio.sleep(1)
     assert num == 6
-
-
-async def test_mult_event():
-    pass
