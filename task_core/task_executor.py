@@ -21,9 +21,14 @@ class TaskExecutor:
         loop: asyncio.AbstractEventLoop | None = None,
         input: str | None = None,
     ) -> None:
-        """
-        任务执行单元
-        :param session_info:`Session`类, 提供session的信息
+        """TaskExector init
+
+        Args:
+            command (str): which will be executed
+            finish_callback (Callable | None, optional): if this command run finished then will call this func. Defaults to None.
+            task_id (str, optional): from which task unit. Defaults to "".
+            loop (asyncio.AbstractEventLoop | None, optional): which loop this command run in. Defaults to None.
+            input (str | None, optional): command's input. Defaults to None(no input).
         """
         assert len(command) > 0
         self.raw_command = command

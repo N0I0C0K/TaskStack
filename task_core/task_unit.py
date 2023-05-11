@@ -37,6 +37,11 @@ class TaskUnit:
     last_exec_time: float = field(init=False, default=0.0)
 
     def can_exec(self) -> bool:
+        """weather this task can run
+
+        Returns:
+            bool: weather this task can run
+        """
         return not (
             self.command is None
             or len(self.command) <= 1
@@ -51,7 +56,18 @@ class TaskUnit:
         logger.info("%s-%s finish execute", self.name, self.id)
         task_manager.unmount_save_session(self.task_exectuor.id)
 
-    def run(self) -> str:
+    def run(self, command_input: str | None = None) -> str:
+        """run task and return session id
+
+        Args:
+            command_input (str | None, optional): special command input. Defaults to None.
+
+        Raises:
+            CantRunTask: if task is already running
+
+        Returns:
+            str: task exector session id
+        """
         if not self.can_exec():
             raise CantRunTask()
         from .task_manager import task_manager
@@ -62,7 +78,7 @@ class TaskUnit:
             self.__on_task_finish,
             task_id=self.id,
             loop=main_loop,
-            input=self.command_input,
+            input=self.command_input if command_input is None else command_input,
         )
 
         self.last_exec_time = time.time()
@@ -70,6 +86,14 @@ class TaskUnit:
         return self.task_exectuor.id
 
     async def stop(self) -> bool:
+        """stop task
+
+        Raises:
+            NotRunning: if this task is not running
+
+        Returns:
+            bool: if stoped, return true
+        """
         if not self.running:
             raise NotRunning
         await self.task_exectuor.kill()
