@@ -67,7 +67,7 @@ async def get_session_output(session_id: str):
         sess_tar = sess.query(SessionInfo).filter(SessionInfo.id == session_id).first()
         if sess_tar is None:
             return make_response(HttpState.CANT_FIND)
-        out_text = f"output missing"
+        out_text = "output missing"
         if sess_tar.running:
             exector = task_manager.get_exector(session_id)
             if exector is not None:

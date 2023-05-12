@@ -6,7 +6,6 @@ from utils.scheduler import CronTrigger, Job, scheduler
 
 from .task_executor import TaskExecutor
 
-
 # from functools import wraps
 
 

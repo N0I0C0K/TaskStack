@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.websockets import WebSocketState
 
-from data import SessionInfo, as_dict, dataManager
+from data import SessionInfo, dataManager
 from utils.api_base_func import token_requie, token_websocket_require
 from utils.api_utils import HttpState, make_response
 from task_core.task_executor import TaskExecutor
 from utils import logger
 
-from .form_model import TaskAddForm
+from .form_model import TaskAddForm, TaskModifyForm, TaskRunForm
 from .task_manager import task_manager as manager
 from .task_session_api import session_api
 from .task_unit import TaskUnit
@@ -46,12 +46,22 @@ async def get_all_task():
     )
 
 
+@task_api.post("/modify")
+async def modify_task(
+    form: TaskModifyForm,
+    task: TaskUnit = Depends(task_id_require),
+):
+    unit = manager.modify_task(task.id, form)
+    return make_response(HttpState.SUCCESS, task=unit.to_dict())
+
+
 @task_api.put("/active")
 async def set_task_active(
     active: bool,
     task: TaskUnit = Depends(task_id_require),
 ):
     task.set_active(active)
+    return make_response(HttpState.SUCCESS)
 
 
 @task_api.delete("/del")
@@ -87,6 +97,14 @@ async def query_task_history(task: TaskUnit = Depends(task_id_require)):
 @task_api.get("/run")
 async def run_task(task: TaskUnit = Depends(task_id_require)):
     return make_response(session_id=task.run())
+
+
+@task_api.post("/run_with_input")
+async def run_task_with_input(
+    form: TaskRunForm,
+    task: TaskUnit = Depends(task_id_require),
+):
+    return make_response(session_id=task.run(form.command_input))
 
 
 @task_api.get("/stop")

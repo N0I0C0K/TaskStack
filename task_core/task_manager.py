@@ -1,13 +1,12 @@
-from data import SessionInfo, TaskInfo, dataManager, as_dict
-from utils import logger, formate_time
+from data import SessionInfo, TaskInfo, dataManager
+from utils import logger
 from utils.file import output_store_path
 
 from utils.event import Event
-from utils.thread_pool import thread_pool
 
 from .task_executor import TaskExecutor
 from .task_unit import TaskUnit
-from .form_model import TaskAddForm
+from .form_model import TaskAddForm, TaskModifyForm
 
 from sqlalchemy import func
 
@@ -155,6 +154,33 @@ class TaskManager:
             new_task.run()
 
         return new_task
+
+    def modify_task(self, task_id: str, modify_task: TaskModifyForm) -> TaskUnit:
+        """modify task
+
+        Args:
+            task_id (str): task id
+
+            modify_task (TaskModifyForm): modify task form
+
+        Returns:
+            TaskUnit: modified task
+        """
+        task = self.task_dict[task_id]
+        task.name = modify_task.name
+        task.command = modify_task.command
+        task.crontab_exp = modify_task.crontab_exp
+        task.active = modify_task.active
+
+        with dataManager.session as sess:
+            task_model = sess.query(TaskInfo).filter(TaskInfo.id == task_id).one()
+            task_model.name = task.name
+            task_model.command = task.command
+            task_model.crontab_exp = task.crontab_exp
+            task_model.active = task.active
+            sess.commit()
+
+        return task
 
 
 task_manager = TaskManager()

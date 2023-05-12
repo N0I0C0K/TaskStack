@@ -41,3 +41,21 @@ async def test_async_event():
     ev.invoke(2)
     await asyncio.sleep(1)
     assert num == 6
+
+
+def test_thread_event():
+    import threading
+
+    a = Event[str]()
+    s_l = []
+
+    def add(s: str):
+        s_l.append(s)
+
+    a += add
+
+    threading.Thread(target=a.invoke, args=("1",)).start()
+    assert s_l[0] == "1"
+    a -= add
+    threading.Thread(target=a.invoke, args=("2",)).start()
+    assert len(s_l) == 1
