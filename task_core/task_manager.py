@@ -100,14 +100,17 @@ class TaskManager:
         self.session_dict[session.id] = session
 
         with dataManager.session as sess:
+            task = sess.query(TaskInfo).filter(TaskInfo.id == session.task_id).one()
             data_sess = SessionInfo(
                 id=session.id,
                 start_time=session.start_time,
                 finish_time=session.finish_time,
-                task_id=session.task_id,
                 command=session.raw_command,
                 command_input=session.command_input,
+                task_id=session.task_id,
+                task=task,
             )
+
             sess.add(data_sess)
             sess.commit()
         from utils.thread_pool import main_loop

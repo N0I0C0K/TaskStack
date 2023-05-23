@@ -25,7 +25,7 @@ app.include_router(api_router)
 
 
 def main():
-    config = Config(app, "0.0.0.0", 5555, loop=main_loop)
+    config = Config(app, "0.0.0.0", 6721, loop=main_loop)
     server = Server(config=config)
     scheduler.start()
     main_loop.run_until_complete(server.serve())

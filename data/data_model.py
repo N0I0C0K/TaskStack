@@ -1,6 +1,8 @@
-from sqlalchemy import Column, Float, Text, Boolean
+from sqlalchemy import Column, Float, Text, Boolean, ForeignKey
+from sqlalchemy.orm import relationship, Mapped
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm.decl_api import DeclarativeMeta
+from typing import List
 
 __all__ = ["SessionInfo", "TaskInfo", "as_dict"]
 
@@ -19,12 +21,13 @@ class SessionInfo(Base):
     __tablename__ = "SessionInfo"
 
     id = Column(Text, primary_key=True)
-    task_id = Column(Text, nullable=False, index=True)
+    task_id = Column(Text, ForeignKey("TaskInfo.id"))
     command = Column(Text, nullable=False)
     command_input = Column(Text, nullable=True)
     start_time = Column(Float, nullable=False)  # 触发时间 time.time()
     finish_time = Column(Float, nullable=False)
     success = Column(Boolean, nullable=True, default=False)
+    task: Mapped["TaskInfo"] = relationship("TaskInfo", back_populates="sessions")
 
     def to_dict(self):
         return as_dict(self) | {"running": self.finish_time < self.start_time}
@@ -48,3 +51,7 @@ class TaskInfo(Base):
     command = Column(Text, nullable=False)
     crontab_exp = Column(Text, nullable=True)
     command_input = Column(Text, nullable=True)
+
+    sessions: Mapped[list[SessionInfo]] = relationship(
+        "SessionInfo", back_populates="task"
+    )
