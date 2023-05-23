@@ -63,8 +63,8 @@ async def test_add_del_task():
 
     assert task.task_exectuor.running is False
 
-    # task_manager.del_task(task.id)
-    # assert task_manager.get_task(task.id) is None
+    task_manager.del_task(task.id)
+    assert task_manager.get_task(task.id) is None
 
 
 @mark.asyncio
