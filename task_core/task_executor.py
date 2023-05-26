@@ -25,9 +25,13 @@ class TaskExecutor:
 
         Args:
             command (str): which will be executed
+
             finish_callback (Callable | None, optional): if this command run finished then will call this func. Defaults to None.
+
             task_id (str, optional): from which task unit. Defaults to "".
+
             loop (asyncio.AbstractEventLoop | None, optional): which loop this command run in. Defaults to None.
+
             input (str | None, optional): command's input. Defaults to None(no input).
         """
         assert len(command) > 0
@@ -60,6 +64,7 @@ class TaskExecutor:
         self.__started = asyncio.Event()
 
     async def wait_until_run(self):
+        """wait until this task start running"""
         await self.__run_process_task
 
     async def run_process(self):

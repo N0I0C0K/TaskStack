@@ -1,7 +1,6 @@
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRouter
 from fastapi import Depends
-from pydantic import BaseModel
 
 from .auth_manager import auth_manager
 from utils import HttpState, make_response

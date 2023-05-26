@@ -7,8 +7,16 @@ class AuthConfig(BaseSettings):
     secret: str
 
 
+class EmailConfig(BaseSettings):
+    sender_email: str
+    sender_email_password: str
+    sender_email_host: str
+    receiver_email: str
+
+
 class AppConfig(BaseSettings):
     auth: AuthConfig
+    email_config: EmailConfig
 
 
 config: AppConfig = None

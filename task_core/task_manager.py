@@ -26,6 +26,7 @@ class TaskManager:
 
         self.task_start_event: Event[TaskExecutor] = Event[TaskExecutor]()
         self.task_finish_event: Event[TaskExecutor] = Event[TaskExecutor]()
+        self.task_error_event: Event[TaskExecutor] = Event[TaskExecutor]()
 
         self.load_task()
         self.handle_last_unfinish_session()
@@ -85,6 +86,8 @@ class TaskManager:
             sess.commit()
 
         self.task_finish_event.invoke(task_sess, loop=main_loop)
+        if not task_sess.success:
+            self.task_error_event.invoke(task_sess, loop=main_loop)
 
         out_file = output_store_path / f"{task_sess.id}.out"
         out_file.touch()

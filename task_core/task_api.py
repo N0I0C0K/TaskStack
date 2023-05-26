@@ -153,10 +153,12 @@ async def task_event_listener(
         manager.task_finish_event += task_finish
 
         while websocket.client_state == WebSocketState.CONNECTED:
+            # TODO: add timeout, and check client state, when task finish, close websocket
             s = await websocket.receive_text()
             if s == "disconnect":
                 break
         await websocket.close()
+
     except WebSocketDisconnect:
         pass
     finally:
