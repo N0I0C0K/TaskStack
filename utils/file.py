@@ -1,7 +1,7 @@
 from pathlib import Path
 
 current_dir_path: Path = Path(__file__).parent.parent
-config_file_path: Path = current_dir_path / "config.yaml"
+config_file_path: Path = current_dir_path / "config.json"
 db_path: Path = current_dir_path / "database.db"
 
 output_store_path: Path = current_dir_path / ".out_store"

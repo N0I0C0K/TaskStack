@@ -93,7 +93,8 @@ class TaskManager:
         out_file.touch()
 
         with out_file.open("w+", encoding="utf-8") as file:
-            file.write(task_sess.info)
+            # file.write(task_sess.info)
+            # file.write(f"{task_sess.id} \n")
             file.write(task_sess.stdout)
         logger.debug("save the out put to %s", out_file.as_posix())
         logger.debug("%s session unmount and save=> %s", task_sess.id, task_sess)

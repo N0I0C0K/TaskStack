@@ -2,6 +2,7 @@ import smtplib
 from email.mime.text import MIMEText
 from utils.config import config
 from task_core.task_executor import TaskExecutor
+from utils import logger
 
 
 class EmailSender:
@@ -35,17 +36,35 @@ class EmailSender:
 
 class NoticeCenter:
     def __init__(self) -> None:
-        self.email_sender = EmailSender(
-            config.email_config.sender_email,
-            config.email_config.sender_email_password,
-            config.email_config.sender_email_host,
-        )
+        self.inited = False
+        self.email_sender = None
 
         from task_core.task_manager import task_manager
 
-        task_manager.task_error_event += self.on_task_error
+        task_manager.task_error_event += self.on_task_error_send_email
 
-    def on_task_error(self, task_exec: TaskExecutor):
+    def init_email_sender(self):
+        if (
+            config.email_config is not None
+            and config.email_config.sender_email is not None
+        ):
+            try:
+                self.email_sender = EmailSender(
+                    config.email_config.sender_email,
+                    config.email_config.sender_email_password,
+                    config.email_config.sender_email_host,
+                )
+            except Exception as e:
+                logger.error("email sender init error: %s", e)
+
+    def init(self):
+        self.init_email_sender()
+        self.inited = True
+
+    def on_task_error_send_email(self, task_exec: TaskExecutor):
+        if self.email_sender is None:
+            return
+
         from task_core.task_manager import task_manager
 
         task_unit = task_manager.get_task(task_exec.task_id)

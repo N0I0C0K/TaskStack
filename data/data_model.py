@@ -2,7 +2,6 @@ from sqlalchemy import Column, Float, Text, Boolean, ForeignKey
 from sqlalchemy.orm import relationship, Mapped
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm.decl_api import DeclarativeMeta
-from typing import List
 
 __all__ = ["SessionInfo", "TaskInfo", "as_dict"]
 

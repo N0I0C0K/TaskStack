@@ -168,12 +168,11 @@ class TaskExecutor:
     @property
     def info(self) -> str:
         return (
-            "\n"
-            f"- Session id: {self.id}\n"
-            f"- {formate_time(self.start_time)}-{formate_time(self.finish_time)}\n"
-            f"- From task: {self.task_id}\n"
-            f"- Command: {self.raw_command}\n"
-            f"- Input: {'' if self.command_input is None else self.command_input}"
+            f"Session id: {self.id}\n"
+            f"{formate_time(self.start_time)}-{formate_time(self.finish_time)}\n"
+            f"From task: {self.task_id}\n"
+            f"Command: {self.raw_command}\n"
+            f"Input: {'' if self.command_input is None else self.command_input}\n"
         )
 
     def __repr__(self) -> str:
