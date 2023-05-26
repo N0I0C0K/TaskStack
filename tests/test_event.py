@@ -54,8 +54,16 @@ def test_thread_event():
 
     a += add
 
-    threading.Thread(target=a.invoke, args=("1",)).start()
+    th = threading.Thread(
+        target=a.invoke, args=("1",), kwargs={"use_multiple_thread": False}
+    )
+    th.start()
+    th.join()
     assert s_l[0] == "1"
     a -= add
-    threading.Thread(target=a.invoke, args=("2",)).start()
+    th = threading.Thread(
+        target=a.invoke, args=("2",), kwargs={"use_multiple_thread": False}
+    )
+    th.start()
+    th.join()
     assert len(s_l) == 1

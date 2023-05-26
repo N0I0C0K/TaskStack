@@ -89,10 +89,41 @@ async def test_asyncio_command_exec():
 async def test_exector_input():
     from task_core.task_executor import TaskExecutor
 
-    a = TaskExecutor("python ./task_test_program/test_input.py", input="3\n")
+    a = TaskExecutor("python ./task_test_program/test_input.py", command_input="3\n")
 
     await a.wait()
     print(a.stdout)
+
+
+@mark.asyncio
+async def test_exector_over_input():
+    from task_core.task_executor import TaskExecutor
+
+    a = TaskExecutor(
+        "python ./task_test_program/test_input.py",
+        command_input="3\n4\nsadasdasdas\njkdh90123l\n",
+    )
+
+    await a.wait()
+    assert a.stdout != ""
+    assert a.success is True
+
+
+@mark.asyncio
+async def test_error_task():
+    from task_core.task_executor import TaskExecutor
+
+    error_exec = TaskExecutor("python ./task_test_program/test_error.py")
+
+    await error_exec.wait()
+
+    assert error_exec.running is False
+    assert error_exec.stdout != ""
+    assert error_exec.stderr != ""
+    assert error_exec.success is False
+    print("stdout:\n", error_exec.stdout)
+    print("stderr:\n", error_exec.stderr)
+    print("returncode:\n", error_exec.returncode)
 
 
 def test_database():

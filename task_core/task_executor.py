@@ -19,7 +19,7 @@ class TaskExecutor:
         finish_callback: Callable | None = None,
         task_id: str = "",
         loop: asyncio.AbstractEventLoop | None = None,
-        input: str | None = None,
+        command_input: str | None = None,
     ) -> None:
         """TaskExector init
 
@@ -37,7 +37,7 @@ class TaskExecutor:
         assert len(command) > 0
         self.raw_command = command
         self.command = command
-        self.command_input = input
+        self.command_input = command_input
 
         self.start_time = time.time()
         self.finish_time = 0.0
@@ -139,6 +139,11 @@ class TaskExecutor:
         return self.task.returncode
 
     async def readline(self) -> str:
+        """read a line from stdout.
+
+        Returns:
+            str: a line from stdout
+        """
         if not self.running or self.task.stdout is None:
             return ""
         async with self.stdout_lock:
@@ -152,6 +157,9 @@ class TaskExecutor:
         return line_str
 
     async def flush_stdout(self) -> str:
+        """
+        flush stdout and stderr completely.(if not finished, will block the thread)
+        """
         async with self.stdout_lock:
             self.__stdout += await self.__decode_async(await self.task.stdout.read())
             self.__stderr += await self.__decode_async(await self.task.stderr.read())
@@ -164,6 +172,10 @@ class TaskExecutor:
     @property
     def stderr(self) -> str:
         return self.__stderr
+
+    @property
+    def returncode(self) -> int | None:
+        return self.task.returncode if self.task else None
 
     @property
     def info(self) -> str:

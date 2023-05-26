@@ -77,7 +77,9 @@ class TaskUnit:
             self.__on_task_finish,
             task_id=self.id,
             loop=main_loop,
-            input=self.command_input if command_input is None else command_input,
+            command_input=self.command_input
+            if command_input is None
+            else command_input,
         )
 
         self.last_exec_time = time.time()

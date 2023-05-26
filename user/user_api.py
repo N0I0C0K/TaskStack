@@ -3,6 +3,7 @@ from utils.api_utils import make_response
 from utils.api_base_func import token_requie
 from utils.config import config, save_config_async
 from pydantic import BaseModel
+import psutil
 
 user_api = APIRouter(prefix="/user", dependencies=[Depends(token_requie)])
 
@@ -32,3 +33,13 @@ async def set_email_config(email_config: EmailConfig):
     config.email_config.receiver_email = email_config.receiver_email
     await save_config_async()
     return make_response()
+
+
+@user_api.get("/system/info")
+async def get_system_info():
+    return make_response(
+        cpu_usage_percent=psutil.cpu_percent(),
+        memory_usage_percent=psutil.virtual_memory().percent,
+        memory_usage=psutil.virtual_memory().used,
+        memory_total=psutil.virtual_memory().total,
+    )

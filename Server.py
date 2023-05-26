@@ -7,9 +7,9 @@ from task_core.task_api import task_api
 from utils.scheduler import scheduler
 from utils.thread_pool import main_loop
 
-from user.notice_center import notice_center
+from user.user_center import user_center
 
-notice_center.init()
+user_center.init()
 
 app = FastAPI(title="TaskStack", description="A simple task manager run on server")
 

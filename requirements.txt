@@ -3,3 +3,4 @@ fastapi
 pyyaml
 sqlalchemy
 websockets
+psutil
