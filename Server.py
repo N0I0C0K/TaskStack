@@ -8,6 +8,7 @@ from utils.scheduler import scheduler
 from utils.thread_pool import main_loop
 
 from user.user_center import user_center
+from user.user_api import user_api
 
 user_center.init()
 
@@ -24,6 +25,7 @@ app.add_middleware(
 api_router = APIRouter(prefix="/api")
 api_router.include_router(auth_api)
 api_router.include_router(task_api)
+api_router.include_router(user_api)
 
 app.include_router(api_router)
 

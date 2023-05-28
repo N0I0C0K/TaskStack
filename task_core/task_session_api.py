@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Query
 
 from task_core.task_manager import task_manager
-from data import SessionInfo, as_dict, dataManager
+from data import SessionInfo, dataManager
 from utils.api_base_func import token_requie
 from utils.api_utils import HttpState, make_response
 from utils.file import output_store_path
@@ -58,7 +58,7 @@ async def find_session(form: SessionQuery):
                 SessionInfo.finish_time <= form.endtime,
             ).all()
         )
-    return make_response(session=[as_dict(x) for x in res])
+    return make_response(session=[x.to_dict() for x in res])
 
 
 @session_api.get("/output")
@@ -66,7 +66,7 @@ async def get_session_output(session_id: str):
     with dataManager.session as sess:
         sess_tar = sess.query(SessionInfo).filter(SessionInfo.id == session_id).first()
         if sess_tar is None:
-            return make_response(HttpState.CANT_FIND)
+            return make_response(code=HttpState.CANT_FIND)
         out_text = "output missing"
         if sess_tar.running:
             exector = task_manager.get_exector(session_id)
@@ -87,17 +87,17 @@ async def get_sesion_info(session_id: str):
     with dataManager.session as sess:
         sess_tar = sess.query(SessionInfo).filter(SessionInfo.id == session_id).first()
         if sess_tar is None:
-            return make_response(HttpState.CANT_FIND)
-        return make_response(sess_tar.to_dict())
+            return make_response(code=HttpState.CANT_FIND)
+        return make_response(session=sess_tar.to_dict())
 
 
 @session_api.get("/stop")
 async def stop_session(session_id: str):
     exector = task_manager.get_exector(session_id)
     if exector is None:
-        return make_response(HttpState.CANT_FIND)
+        return make_response(code=HttpState.CANT_FIND)
     await exector.kill()
-    return make_response(HttpState.SUCCESS)
+    return make_response()
 
 
 @session_api.websocket("/communicate")

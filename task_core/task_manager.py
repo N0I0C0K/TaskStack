@@ -124,7 +124,9 @@ class TaskManager:
     def del_task(self, task_id: str):
         if self.task_dict[task_id].running:
             raise CantDelTask("task is still running")
-        self.task_dict.pop(task_id)
+        task = self.task_dict.pop(task_id)
+        task.clean_up()
+
         with dataManager.session as sess:
             task = sess.query(TaskInfo).filter(TaskInfo.id == task_id).one()
             sess.delete(task)

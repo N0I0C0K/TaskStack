@@ -14,12 +14,10 @@ auth_api = APIRouter(prefix="/auth")
 async def login(secret_key: str):
     token = auth_manager.auth_secret_key(secret_key)
     if token is None:
-        return make_response(HttpState.INVALID_TOKEN)
+        return make_response(code=HttpState.INVALID_TOKEN)
     else:
         j_res = JSONResponse(
-            content=make_response(
-                HttpState.SUCCESS, token=token.token, active_time=token.active_time
-            )
+            content=make_response(token=token.token, active_time=token.active_time)
         )
         j_res.set_cookie("token", token.token)
         return j_res

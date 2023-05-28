@@ -28,7 +28,6 @@ async def task_id_require(task_id: str) -> TaskUnit:
 async def new_task(form: TaskAddForm):
     task = manager.add_task(form)
     return make_response(
-        HttpState.SUCCESS,
         task=task.to_dict(),
     )
 
@@ -36,7 +35,6 @@ async def new_task(form: TaskAddForm):
 @task_api.get("/list")
 async def get_all_task():
     return make_response(
-        HttpState.SUCCESS,
         list=list(
             map(
                 lambda x: x.to_dict(),
@@ -52,7 +50,7 @@ async def modify_task(
     task: TaskUnit = Depends(task_id_require),
 ):
     unit = manager.modify_task(task.id, form)
-    return make_response(HttpState.SUCCESS, task=unit.to_dict())
+    return make_response(task=unit.to_dict())
 
 
 @task_api.put("/active")
@@ -61,19 +59,18 @@ async def set_task_active(
     task: TaskUnit = Depends(task_id_require),
 ):
     task.set_active(active)
-    return make_response(HttpState.SUCCESS)
+    return make_response()
 
 
 @task_api.delete("/del")
 async def del_task(task: TaskUnit = Depends(task_id_require)):
     manager.del_task(task.id)
-    return make_response(HttpState.SUCCESS)
+    return make_response()
 
 
 @task_api.get("/query")
 async def query_task_info(task: TaskUnit = Depends(task_id_require)):
     return make_response(
-        HttpState.SUCCESS,
         task=task.to_dict(),
     )
 
@@ -89,7 +86,6 @@ async def query_task_history(task: TaskUnit = Depends(task_id_require)):
             .all()
         )
         return make_response(
-            HttpState.SUCCESS,
             sessions=[x.to_dict() for x in task_sess],
         )
 
@@ -153,7 +149,6 @@ async def task_event_listener(
         manager.task_finish_event += task_finish
 
         while websocket.client_state == WebSocketState.CONNECTED:
-            # TODO: add timeout, and check client state, when task finish, close websocket
             s = await websocket.receive_text()
             if s == "disconnect":
                 break

@@ -129,6 +129,13 @@ class TaskUnit:
                 self.scheduler_job.pause()
                 logger.debug("%s-%s task paused", self.id, self.name)
 
+    def clean_up(self):
+        if self.running:
+            raise AlreadyOnTheRun("task is running")
+
+        if self.scheduler_job is not None:
+            self.scheduler_job.remove()
+
     @property
     def running(self) -> bool:
         return self.task_exectuor is not None and self.task_exectuor.running

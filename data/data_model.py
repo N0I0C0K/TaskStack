@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship, Mapped
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm.decl_api import DeclarativeMeta
 
-__all__ = ["SessionInfo", "TaskInfo", "as_dict"]
+__all__ = ["SessionInfo", "TaskInfo"]
 
 
 Base: DeclarativeMeta = declarative_base()
@@ -29,7 +29,16 @@ class SessionInfo(Base):
     task: Mapped["TaskInfo"] = relationship("TaskInfo", back_populates="sessions")
 
     def to_dict(self):
-        return as_dict(self) | {"running": self.finish_time < self.start_time}
+        return {
+            "id": self.id,
+            "task_id": self.task_id,
+            "command": self.command,
+            "command_input": self.command_input,
+            "start_time": self.start_time,
+            "finish_time": self.finish_time,
+            "success": self.success,
+            "running": self.finish_time < self.start_time,
+        }
 
     @property
     def running(self):
@@ -54,3 +63,14 @@ class TaskInfo(Base):
     sessions: Mapped[list[SessionInfo]] = relationship(
         "SessionInfo", back_populates="task"
     )
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "active": self.active,
+            "create_time": self.create_time,
+            "command": self.command,
+            "crontab_exp": self.crontab_exp,
+            "command_input": self.command_input,
+        }

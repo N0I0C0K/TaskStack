@@ -6,12 +6,60 @@ import psutil
 import time
 
 
+class SystemInfo:
+    def __init__(self) -> None:
+        self.cpu_usage_percent = 0.0
+        self.memory_usage_percent = 0.0
+        self.memory_usage = 0
+        self.memory_total = 0
+
+        self.network_sent_speed = 0
+        self.network_recv_speed = 0
+
+        self.network_sent_prev = 0
+        self.network_recv_prev = 0
+
+        self.last_refresh_time = 0
+        self.refresh()
+
+    def get_info(self) -> dict:
+        if time.time() - self.last_refresh_time > 1:
+            self.refresh()
+        return {
+            "cpu_usage_percent": self.cpu_usage_percent,
+            "memory_usage_percent": self.memory_usage_percent,
+            "memory_usage": self.memory_usage,
+            "memory_total": self.memory_total,
+            "network_send_speed": self.network_sent_speed,
+            "network_recv_speed": self.network_recv_speed,
+        }
+
+    def refresh(self):
+        self.cpu_usage_percent = psutil.cpu_percent()
+        self.memory_usage_percent = psutil.virtual_memory().percent
+        self.memory_usage = psutil.virtual_memory().used
+        self.memory_total = psutil.virtual_memory().total
+
+        network_sent = psutil.net_io_counters().bytes_sent
+        network_recv = psutil.net_io_counters().bytes_recv
+
+        if self.network_sent_prev != 0:
+            self.network_sent_speed = network_sent - self.network_sent_prev
+        if self.network_recv_prev != 0:
+            self.network_recv_speed = network_recv - self.network_recv_prev
+
+        self.network_sent_prev = network_sent
+        self.network_recv_prev = network_recv
+
+        self.last_refresh_time = time.time()
+
+
 class UserCenter:
     def __init__(self) -> None:
         self.inited = False
         self.email_sender = None
-        self.last_system_info_fetch_time = None
-        self.last_system_info = None
+
+        self.system_info = SystemInfo()
 
         from task_core.task_manager import task_manager
 
@@ -54,28 +102,6 @@ class UserCenter:
                 f"task [{task_unit.name}=>{task_unit.command}] error: {task_exec.stderr}",
                 f"task {task_unit.name} error",
             )
-
-    def get_system_info(self) -> dict:
-        if (
-            self.last_system_info_fetch_time is not None
-            and time.time() - self.last_system_info_fetch_time < 1
-        ):
-            return self.last_system_info
-
-        cpu_usage_percent = psutil.cpu_percent()
-        memory_usage_percent = psutil.virtual_memory().percent
-        memory_usage = psutil.virtual_memory().used
-        memory_total = psutil.virtual_memory().total
-
-        self.last_system_info_fetch_time = time.time()
-        self.last_system_info = {
-            "cpu_usage_percent": cpu_usage_percent,
-            "memory_usage_percent": memory_usage_percent,
-            "memory_usage": memory_usage,
-            "memory_total": memory_total,
-        }
-
-        return self.last_system_info
 
 
 user_center = UserCenter()

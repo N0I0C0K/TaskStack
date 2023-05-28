@@ -10,6 +10,7 @@ class HttpState(enum.Enum):
 
 
 def make_response(
+    *,
     code: HttpState = HttpState.SUCCESS,
     data: dict | None = None,
     **kwargs,
