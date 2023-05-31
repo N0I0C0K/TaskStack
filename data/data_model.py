@@ -59,6 +59,7 @@ class TaskInfo(Base):
     command = Column(Text, nullable=False)
     crontab_exp = Column(Text, nullable=True)
     command_input = Column(Text, nullable=True)
+    comment = Column(Text, nullable=True)
 
     sessions: Mapped[list[SessionInfo]] = relationship(
         "SessionInfo", back_populates="task"
@@ -73,4 +74,5 @@ class TaskInfo(Base):
             "command": self.command,
             "crontab_exp": self.crontab_exp,
             "command_input": self.command_input,
+            "comment": self.comment,
         }

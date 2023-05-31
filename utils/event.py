@@ -1,4 +1,4 @@
-from typing import TypeVar, Generic, Callable
+from typing import TypeVar, Generic, Callable, Coroutine, Any
 from utils import logger
 from utils.thread_pool import thread_pool
 import asyncio
@@ -9,7 +9,7 @@ Ts = TypeVar
 
 class Event(Generic[T]):
     def __init__(self) -> None:
-        self.actions: set[Callable[[T], None]] = set()
+        self.actions: set[Callable[[T], None | Coroutine[Any, Any, None]]] = set()
 
     def invoke(
         self,

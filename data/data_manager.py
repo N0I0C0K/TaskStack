@@ -30,6 +30,10 @@ class DataManager:
     def create_all_table(self):
         Base.metadata.create_all(self.engine)
 
+    def recreate_all_table(self):
+        Base.metadata.drop_all(self.engine)
+        Base.metadata.create_all(self.engine)
+
     def remove_all_table(self):
         Base.metadata.drop_all(self.engine)
 
