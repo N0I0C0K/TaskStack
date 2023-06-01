@@ -12,6 +12,8 @@ from utils.api_base_func import token_requie
 from utils.api_utils import HttpState, make_response
 from utils.file import output_store_path
 
+from utils.websocket import websocket_on_recive
+
 
 class SessionQuery(BaseModel):
     starttime: float | None
@@ -109,10 +111,21 @@ async def session_communicate(session_id: str, *, socket: WebSocket):
         return
 
     await socket.accept()
+
+    def on_recive(data: dict):
+        if "input" in data:
+            task_exector.append_input(data["input"])
+
     try:
         await socket.receive_text()
+
+        asyncio.get_running_loop().create_task(
+            websocket_on_recive(socket, on_recive)
+        )  # create a task to recive data from websocket
+
         while True:
             output_line = await task_exector.readline()
+
             await socket.send_text(output_line)
             if task_exector.finished:
                 break

@@ -93,7 +93,12 @@ class TaskExecutor:
 
     async def __finish_check(self):
         await self.task.wait()
-        logger.info("%s[task:%s] run finished", self.raw_command, self.task_id)
+        logger.info(
+            "%s[task:%s] run finished with code: %d",
+            self.raw_command,
+            self.task_id,
+            self.returncode,
+        )
         self.__running = False
         self.finish_time = time.time()
 
@@ -108,7 +113,7 @@ class TaskExecutor:
 
     @property
     def finished(self) -> bool:
-        return self.task is not None and not self.__running
+        return self.task is None or not self.__running
 
     @property
     def running(self) -> bool:
@@ -161,9 +166,30 @@ class TaskExecutor:
         flush stdout and stderr completely.(if not finished, will block the thread)
         """
         async with self.stdout_lock:
-            self.__stdout += await self.__decode_async(await self.task.stdout.read())
-            self.__stderr += await self.__decode_async(await self.task.stderr.read())
+            d_timeout = 5 if self.finished else 10
+            try:
+                self.__stdout += await self.__decode_async(
+                    await asyncio.wait_for(self.task.stdout.read(), timeout=d_timeout)
+                )
+                self.__stderr += await self.__decode_async(
+                    await asyncio.wait_for(self.task.stderr.read(), timeout=d_timeout)
+                )
+            except asyncio.TimeoutError:
+                logger.warning("flush stdout timeout")
+
         return self.__stdout
+
+    def append_input(self, input_: str):
+        """append input to stdin, if stdin is None, will raise ValueError, if task is None, will raise ValueError too.
+
+        Args:
+            input_ (str): input string
+        """
+        if self.task is None:
+            raise ValueError
+        if self.task.stdin is None:
+            raise ValueError
+        self.task.stdin.write(input_.encode())
 
     @property
     def stdout(self) -> str:
