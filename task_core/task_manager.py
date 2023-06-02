@@ -83,6 +83,7 @@ class TaskManager:
             )
             data_sess.finish_time = task_sess.finish_time
             data_sess.success = task_sess.success
+            data_sess.command_input = task_sess.command_input
             sess.commit()
 
         self.task_finish_event.invoke(task_sess, loop=main_loop)

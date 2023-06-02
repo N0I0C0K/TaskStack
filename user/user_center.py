@@ -93,14 +93,14 @@ class UserCenter:
         if task_unit is None:
             self.email_sender.send(
                 config.email_config.receiver_email,
-                f"task exector [{task_exec.id}=>{task_exec.command}] error: {task_exec.stderr}",
-                f"task {task_exec.command} error",
+                f"task exector [{task_exec.id}=>{task_exec.command}] error: {task_exec.stderr}\nfrom TaskStack Auto Email",
+                f"[TaskStack] {task_exec.command} run failed",
             )
         else:
             self.email_sender.send(
                 config.email_config.receiver_email,
-                f"task [{task_unit.name}=>{task_unit.command}] error: {task_exec.stderr}",
-                f"task {task_unit.name} error",
+                f"[{task_unit.name}=>{task_unit.command}] run failed: {task_exec.stderr}\nfrom TaskStack Auto Email",
+                f"[TaskStack] {task_unit.name} run failed",
             )
 
 

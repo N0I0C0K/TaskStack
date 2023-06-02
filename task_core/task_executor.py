@@ -37,7 +37,8 @@ class TaskExecutor:
         assert len(command) > 0
         self.raw_command = command
         self.command = command
-        self.command_input = command_input
+
+        self.command_input = command_input if command_input is not None else ""
 
         self.start_time = time.time()
         self.finish_time = 0.0
@@ -76,7 +77,7 @@ class TaskExecutor:
                 stdin=subprocess.PIPE,
             )
             self.__running = True
-            if self.command_input is not None:
+            if self.command_input is not None and len(self.command_input) > 0:
                 self.task.stdin.write(self.command_input.encode())
         except OSError as oserr:
             logger.error(oserr)
@@ -144,7 +145,7 @@ class TaskExecutor:
         return self.task.returncode
 
     async def readline(self) -> str:
-        """read a line from stdout.
+        """read a line from stdout. will block the thread if output is empty, use with caution.
 
         Returns:
             str: a line from stdout
@@ -179,7 +180,7 @@ class TaskExecutor:
 
         return self.__stdout
 
-    def append_input(self, input_: str):
+    def append_input(self, input_: str, end: str = "\n"):
         """append input to stdin, if stdin is None, will raise ValueError, if task is None, will raise ValueError too.
 
         Args:
@@ -189,7 +190,9 @@ class TaskExecutor:
             raise ValueError
         if self.task.stdin is None:
             raise ValueError
+        input_ = input_.rstrip("\n") + end
         self.task.stdin.write(input_.encode())
+        self.command_input += input_
 
     @property
     def stdout(self) -> str:

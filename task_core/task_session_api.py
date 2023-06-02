@@ -11,6 +11,7 @@ from data import SessionInfo, dataManager
 from utils.api_base_func import token_requie
 from utils.api_utils import HttpState, make_response
 from utils.file import output_store_path
+from utils.logger import logger
 
 from utils.websocket import websocket_on_recive
 
@@ -113,6 +114,7 @@ async def session_communicate(session_id: str, *, socket: WebSocket):
     await socket.accept()
 
     def on_recive(data: dict):
+        logger.debug("websocket recive data: %s", data)
         if "input" in data:
             task_exector.append_input(data["input"])
 
