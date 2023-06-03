@@ -87,21 +87,37 @@ class UserCenter:
         if self.email_sender is None:
             return
 
-        from task_core.task_manager import task_manager
+        from task_core import task_manager, external_visit_manager
 
         task_unit = task_manager.get_task(task_exec.task_id)
+
+        external = external_visit_manager.add_external_visit(task_exec.id)
+
+        email_content: list[str] = []
+        email_subject: list[str] = []
+
         if task_unit is None:
-            self.email_sender.send(
-                config.email_config.receiver_email,
+            email_content.append(
                 f"task exector [{task_exec.id}=>{task_exec.command}] error: {task_exec.stderr}\nfrom TaskStack Auto Email",
-                f"[TaskStack] {task_exec.command} run failed",
             )
+            email_subject.append(f"[TaskStack] {task_exec.command} run failed")
         else:
-            self.email_sender.send(
-                config.email_config.receiver_email,
+            email_content.append(
                 f"[{task_unit.name}=>{task_unit.command}] run failed: {task_exec.stderr}\nfrom TaskStack Auto Email",
-                f"[TaskStack] {task_unit.name} run failed",
             )
+            email_subject.append(f"[TaskStack] {task_unit.name} run failed")
+
+        email_content.append(
+            f"Quick visit link: {external.link}, valid time up to {external.expire_time}"
+        )
+
+        self.email_sender.send(
+            config.email_config.receiver_email,
+            "\n".join(email_content),
+            "\n".join(email_subject),
+        )
+
+        logger.info("send email to %s", config.email_config.receiver_email)
 
 
 user_center = UserCenter()

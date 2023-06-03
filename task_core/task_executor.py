@@ -6,10 +6,12 @@ import time
 from asyncio import subprocess
 from asyncio.subprocess import Process
 from typing import Callable
+import aiofiles
 
 from chardet import UniversalDetector
 
 from utils import auto_decode, logger, uuid, formate_time
+from utils.file import output_store_path
 
 
 class TaskExecutor:
@@ -218,3 +220,13 @@ class TaskExecutor:
 
     def __repr__(self) -> str:
         return self.info
+
+
+async def get_session_output_from_file(session_id: str) -> str:
+    out_file = output_store_path / f"{session_id}.out"
+    if out_file.exists():
+        async with aiofiles.open(out_file.as_posix()) as file:
+            out_text = await file.read()
+            return out_text
+    else:
+        return ""

@@ -80,8 +80,12 @@ async def get_session_output(session_id: str):
             if out_file.exists():
                 async with aiofiles.open(out_file.as_posix()) as file:
                     out_text = await file.read()
+
         return make_response(
-            session_id=session_id, finish=sess_tar.finish, output=out_text
+            session_id=session_id,
+            finish=sess_tar.finish,
+            output=out_text,
+            input=sess_tar.command_input,
         )
 
 

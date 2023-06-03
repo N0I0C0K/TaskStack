@@ -4,9 +4,10 @@ import enum
 
 class HttpState(enum.Enum):
     SUCCESS = 200, "success"
-    INVALID_TOKEN = 501, "invalid token"
-    CANT_FIND = 502, "can not find what you want to find"
-    UNKONOW_ERR = 600, "unknow error"
+    FAILED = 400, "failed"
+    INVALID_TOKEN = 401, "invalid token"
+    CANT_FIND = 404, "can't find"
+    UNKONOW_ERR = 500, "unkonow error"
 
 
 def make_response(

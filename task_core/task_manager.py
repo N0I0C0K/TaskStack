@@ -2,6 +2,9 @@ from data import SessionInfo, TaskInfo, dataManager
 from utils import logger
 from utils.file import output_store_path
 
+import typing
+import time
+
 from utils.event import Event
 
 from .task_executor import TaskExecutor
@@ -19,10 +22,15 @@ class TaskStillRunning(Exception):
     pass
 
 
+SessionId = typing.NewType("SessionId", str)
+TaskId = typing.NewType("TaskId", str)
+
+
 class TaskManager:
     def __init__(self) -> None:
         self.task_dict: dict[str, TaskUnit] = dict()
         self.session_dict: dict[str, TaskExecutor] = dict()
+        self.external_visit_dict: dict[str, str] = dict()
 
         self.task_start_event: Event[TaskExecutor] = Event[TaskExecutor]()
         self.task_finish_event: Event[TaskExecutor] = Event[TaskExecutor]()
@@ -96,7 +104,11 @@ class TaskManager:
         with out_file.open("w+", encoding="utf-8") as file:
             # file.write(task_sess.info)
             # file.write(f"{task_sess.id} \n")
+
             file.write(task_sess.stdout)
+            if not task_sess.success:
+                file.write("=======================\n[-] failed info:\n")
+                file.write(task_sess.stderr)
         logger.debug("save the out put to %s", out_file.as_posix())
         logger.debug("%s session unmount and save=> %s", task_sess.id, task_sess)
 
@@ -194,3 +206,6 @@ class TaskManager:
 
 
 task_manager = TaskManager()
+
+
+__all__ = ["task_manager"]
