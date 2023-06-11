@@ -1,6 +1,12 @@
+uvicorn[standard]
 pydantic
 fastapi
 pyyaml
 sqlalchemy
 websockets
 psutil
+chardet
+aiofiles
+pytest
+apscheduler
+deprecated
